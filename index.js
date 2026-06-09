@@ -4,12 +4,19 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 const comandosPendentes = [];
-const comandosHistorico = [];
-const comandosAtendidos = [];
+const historico = [];
+const MAX_HISTORICO = 20;
 const inicializacoes = [];
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+
+function adicionarAoHistorico(evento) {
+  historico.unshift(evento);
+  if (historico.length > MAX_HISTORICO) {
+    historico.pop();
+  }
+}
 
 function analisarComandoLocal(frase) {
   const lower = frase.toLowerCase();
@@ -73,9 +80,10 @@ app.post('/api/analisar', (req, res) => {
   const comando = analisarComandoLocal(frase);
   comando.player = player;
   comando.textoOriginal = frase;
+  comando.timestamp = new Date().toISOString();
 
+  adicionarAoHistorico(comando);
   comandosPendentes.push(comando);
-  comandosHistorico.push(comando);
 
   return res.status(200).json({
     sucesso: true,
@@ -96,11 +104,12 @@ app.post('/api/inicializar', (req, res) => {
 
   const evento = {
     player,
-    data: new Date().toISOString()
+    data: new Date().toISOString(),
+    tipo: 'inicializacao'
   };
 
   console.log(`[LOG] O script MANUS HUB foi executado pelo jogador: ${player}`);
-  inicializacoes.push(evento);
+  adicionarAoHistorico(evento);
 
   return res.status(200).json({
     sucesso: true,
@@ -109,24 +118,18 @@ app.post('/api/inicializar', (req, res) => {
   });
 });
 
-app.get('/api/comandos/historico', (req, res) => {
+app.get('/api/comandos', (req, res) => {
   return res.status(200).json({
     sucesso: true,
-    pedidos: comandosHistorico,
-    atendidos: comandosAtendidos,
-    inicializacoes: inicializacoes
+    comandos: historico
   });
 });
 
-app.get('/api/comandos', (req, res) => {
-  const comandos = [...comandosPendentes];
-
-  comandosAtendidos.push(...comandos);
-  comandosPendentes.length = 0;
-
+app.get('/api/comandos/historico', (req, res) => {
   return res.status(200).json({
     sucesso: true,
-    comandos: comandos
+    historico: historico,
+    total: historico.length
   });
 });
 

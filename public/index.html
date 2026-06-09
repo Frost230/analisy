@@ -74,7 +74,7 @@
     .grid {
       display: grid;
       gap: 18px;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      grid-template-columns: 1fr;
     }
 
     .panel-header {
@@ -121,7 +121,7 @@
     }
 
     .list-card {
-      min-height: 280px;
+      min-height: auto;
     }
 
     .list-card h2 {
@@ -136,24 +136,40 @@
       margin: 0;
     }
 
-    .command-item {
-      margin-bottom: 16px;
-      padding: 18px;
-      background: #101010;
-      border-radius: 14px;
-      border: 1px solid rgba(255, 255, 255, 0.05);
+    .event-message {
+      margin-bottom: 12px;
+      padding: 14px;
+      background: #0f0f0f;
+      border-left: 3px solid #e0e0e0;
+      border-radius: 6px;
     }
 
-    .command-item:last-child {
+    .event-message:last-child {
       margin-bottom: 0;
     }
 
-    .command-item pre {
-      margin: 0;
-      white-space: pre-wrap;
-      word-break: break-word;
-      color: #dee2e6;
-      font-size: 0.94rem;
+    .event-message.command {
+      border-left-color: #8a8a8a;
+    }
+
+    .event-message.init {
+      border-left-color: #7a7a7a;
+    }
+
+    .event-player {
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    .event-action {
+      color: var(--text-muted);
+    }
+
+    .event-time {
+      display: block;
+      margin-top: 8px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
     }
 
     .info-list {
@@ -184,7 +200,7 @@
     <header class="header">
       <div>
         <h1 class="title">Painel de Comandos - Roblox Hub</h1>
-        <p class="subtitle">Monitore os comandos solicitados pelo jogo e verifique quais já foram atendidos. Ideal para acompanhar o fluxo de ações em tempo real.</p>
+        <p class="subtitle">Monitore os eventos do jogo em tempo real. Todos os servidores compartilham o mesmo histórico de ações.</p>
       </div>
       <div class="panel-header">
         <button class="button-primary" id="refreshButton">Atualizar histórico</button>
@@ -194,18 +210,8 @@
 
     <section class="grid">
       <article class="list-card">
-        <h2>Comandos solicitados</h2>
-        <div id="pedidosConteudo" class="empty-state">Carregando histórico...</div>
-      </article>
-
-      <article class="list-card">
-        <h2>Comandos atendidos</h2>
-        <div id="atendidosConteudo" class="empty-state">Carregando histórico...</div>
-      </article>
-
-      <article class="list-card">
-        <h2>Inicializações</h2>
-        <div id="inicializacoesConteudo" class="empty-state">Carregando histórico...</div>
+        <h2>Histórico de eventos</h2>
+        <div id="historicoConteudo" class="empty-state">Carregando histórico...</div>
       </article>
     </section>
 
@@ -214,23 +220,46 @@
         <h2 class="panel-title">Endpoints disponíveis</h2>
       </div>
       <div class="info-list">
-        <code>POST /api/inicializar</code> - enviar JSON com <code>player</code> para registrar a inicialização do script.
-        <code>POST /api/analisar</code> - enviar JSON com <code>player</code> e <code>texto</code> para registrar o comando.
-        <code>GET /api/comandos</code> - obter os comandos pendentes e marcar como atendidos.
-        <code>GET /api/comandos/historico</code> - consultar todo o histórico de pedidos, atendimentos e inicializações.
+        <code>POST /api/inicializar</code> - registrar a inicialização do script.
+        <code>POST /api/analisar</code> - enviar um comando de texto para análise.
+        <code>GET /api/comandos</code> - obter o histórico completo de eventos.
+        <code>GET /api/comandos/historico</code> - consultar o histórico detalhado.
       </div>
     </section>
   </div>
 
   <script>
-    const pedidosConteudo = document.getElementById('pedidosConteudo');
-    const atendidosConteudo = document.getElementById('atendidosConteudo');
-    const inicializacoesConteudo = document.getElementById('inicializacoesConteudo');
+    const historicoConteudo = document.getElementById('historicoConteudo');
     const ultimaAtualizacao = document.getElementById('ultimaAtualizacao');
     const refreshButton = document.getElementById('refreshButton');
 
-    function formatCommand(cmd) {
-      return `<div class="command-item"><pre>${JSON.stringify(cmd, null, 2)}</pre></div>`;
+    function formatarMensagem(evento) {
+      if (!evento) return '';
+
+      if (evento.tipo === 'inicializacao') {
+        return `
+          <div class="event-message init">
+            <span class="event-player">${evento.player}</span>
+            <span class="event-action"> iniciou o script MANUS HUB</span>
+            <span class="event-time">${new Date(evento.data).toLocaleTimeString('pt-BR')}</span>
+          </div>
+        `;
+      }
+
+      if (evento.acao) {
+        const alvo = evento.alvo ? ` para <span class="event-player">${evento.alvo}</span>` : '';
+        const acao = evento.acao === 'desconhecido' ? 'ação desconhecida' : evento.acao;
+        
+        return `
+          <div class="event-message command">
+            <span class="event-player">${evento.player}</span>
+            <span class="event-action"> executou ${acao}${alvo}</span>
+            <span class="event-time">${new Date(evento.timestamp).toLocaleTimeString('pt-BR')}</span>
+          </div>
+        `;
+      }
+
+      return '';
     }
 
     async function carregarHistorico() {
@@ -239,33 +268,28 @@
         const data = await response.json();
 
         if (!data.sucesso) {
-          pedidosConteudo.textContent = 'Falha ao carregar histórico.';
-          atendidosConteudo.textContent = 'Falha ao carregar histórico.';
+          historicoConteudo.textContent = 'Falha ao carregar histórico.';
           return;
         }
 
-        pedidosConteudo.innerHTML = data.pedidos.length
-          ? data.pedidos.map(formatCommand).join('')
-          : '<p class="empty-state">Nenhum comando solicitado ainda.</p>';
+        if (data.historico.length === 0) {
+          historicoConteudo.innerHTML = '<p class="empty-state">Nenhum evento registrado ainda.</p>';
+        } else {
+          historicoConteudo.innerHTML = data.historico
+            .map(evento => formatarMensagem(evento))
+            .join('');
+        }
 
-        atendidosConteudo.innerHTML = data.atendidos.length
-          ? data.atendidos.map(formatCommand).join('')
-          : '<p class="empty-state">Nenhum comando atendido ainda.</p>';
-
-        inicializacoesConteudo.innerHTML = data.inicializacoes.length
-          ? data.inicializacoes.map(formatCommand).join('')
-          : '<p class="empty-state">Nenhuma inicialização registrada ainda.</p>';
-
-        ultimaAtualizacao.textContent = 'Última atualização: ' + new Date().toLocaleTimeString();
+        ultimaAtualizacao.textContent = 'Última atualização: ' + new Date().toLocaleTimeString('pt-BR');
       } catch (error) {
-        pedidosConteudo.textContent = 'Erro ao carregar histórico.';
-        atendidosConteudo.textContent = 'Erro ao carregar histórico.';
+        historicoConteudo.textContent = 'Erro ao carregar histórico.';
         console.error(error);
       }
     }
 
     refreshButton.addEventListener('click', carregarHistorico);
     carregarHistorico();
+    setInterval(carregarHistorico, 3000);
   </script>
 </body>
 </html>
