@@ -257,6 +257,18 @@
         `;
       }
 
+      if (evento.tipo === 'comando_global') {
+        const acao = evento.acao || 'comando_global';
+        const params = evento.parametros ? JSON.stringify(evento.parametros) : '';
+        return `
+          <div class="event-message init">
+            <span class="event-player">[GLOBAL] ${evento.player || 'Sistema'}</span>
+            <span class="event-action"> executou comando global <strong>${escapeHtml(acao)}</strong> ${escapeHtml(params)}</span>
+            <span class="event-time">${new Date(evento.timestamp || evento.data).toLocaleTimeString('pt-BR')}</span>
+          </div>
+        `;
+      }
+
       return '';
     }
 

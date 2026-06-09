@@ -66,6 +66,34 @@ function analisarComandoLocal(frase) {
   return comando;
 }
 
+function detectarComandoGlobal(texto, body) {
+  const lower = texto.toLowerCase();
+
+  // kill global: pede para todos matarem/algo do tipo
+  if (/\b(kill(?:\s+global|\s+all|\s+everyone)?|mata(?:r)?\s+(global|todos|todo mundo|everyone))\b/.test(lower)) {
+    return {
+      acao: 'kill_global',
+      parametros: {}
+    };
+  }
+
+  // bring global: pede para todos irem para o servidor do requisitante
+  if (/\b(bring(?:\s+global|\s+all|\s+everyone)?|traz(?:er)?\s+(global|todos|todo mundo))\b/.test(lower)) {
+    const parametros = {
+      requester: (body && body.player) || null,
+      serverId: (body && (body.serverId || body.server)) || null,
+      joinData: (body && body.joinData) || null
+    };
+
+    return {
+      acao: 'bring_global',
+      parametros
+    };
+  }
+
+  return null;
+}
+
 app.post('/api/analisar', (req, res) => {
   const { player, conteudo } = req.body;
   const texto = (conteudo || '').toString().trim();
@@ -83,6 +111,14 @@ app.post('/api/analisar', (req, res) => {
     conteudo: texto,
     timestamp: new Date().toISOString()
   };
+
+  // Detecta comandos globais na mensagem e transforma o evento quando aplicável
+  const comandoGlobal = detectarComandoGlobal(texto, req.body);
+  if (comandoGlobal) {
+    mensagem.tipo = 'comando_global';
+    mensagem.acao = comandoGlobal.acao;
+    mensagem.parametros = comandoGlobal.parametros;
+  }
 
   adicionarAoHistorico(mensagem);
 
