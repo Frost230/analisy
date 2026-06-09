@@ -67,28 +67,29 @@ function analisarComandoLocal(frase) {
 }
 
 app.post('/api/analisar', (req, res) => {
-  const { player, texto, conteudo } = req.body;
-  const frase = (texto || conteudo || '').toString().trim();
+  const { player, conteudo } = req.body;
+  const texto = (conteudo || '').toString().trim();
 
-  if (!player || !frase) {
+  if (!player || typeof player !== 'string' || !texto) {
     return res.status(400).json({
       sucesso: false,
-      mensagem: 'Requisição inválida. Envie os campos "player" e "texto" (ou "conteudo").'
+      mensagem: 'Requisição inválida. Envie os campos "player" e "conteudo".'
     });
   }
 
-  const comando = analisarComandoLocal(frase);
-  comando.player = player;
-  comando.textoOriginal = frase;
-  comando.timestamp = new Date().toISOString();
+  const mensagem = {
+    tipo: 'chat',
+    player: player,
+    conteudo: texto,
+    timestamp: new Date().toISOString()
+  };
 
-  adicionarAoHistorico(comando);
-  comandosPendentes.push(comando);
+  adicionarAoHistorico(mensagem);
 
   return res.status(200).json({
     sucesso: true,
-    mensagem: 'Comando interpretado localmente e armazenado.',
-    comando: comando
+    mensagem: 'Mensagem recebida e adicionada ao histórico.',
+    evento: mensagem
   });
 });
 

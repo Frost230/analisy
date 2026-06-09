@@ -246,15 +246,13 @@
         `;
       }
 
-      if (evento.acao) {
-        const alvo = evento.alvo ? ` para <span class="event-player">${evento.alvo}</span>` : '';
-        const acao = evento.acao === 'desconhecido' ? 'ação desconhecida' : evento.acao;
-        
+      if (evento.tipo === 'chat' || evento.conteudo) {
+        const conteudo = evento.conteudo || evento.textoOriginal || '';
         return `
           <div class="event-message command">
             <span class="event-player">${evento.player}</span>
-            <span class="event-action"> executou ${acao}${alvo}</span>
-            <span class="event-time">${new Date(evento.timestamp).toLocaleTimeString('pt-BR')}</span>
+            <span class="event-action">: ${escapeHtml(conteudo)}</span>
+            <span class="event-time">${new Date(evento.timestamp || evento.data).toLocaleTimeString('pt-BR')}</span>
           </div>
         `;
       }
@@ -262,9 +260,18 @@
       return '';
     }
 
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
     async function carregarHistorico() {
       try {
-        const response = await fetch('/api/comandos/historico');
+        const response = await fetch('/api/comandos');
         const data = await response.json();
 
         if (!data.sucesso) {
@@ -272,10 +279,11 @@
           return;
         }
 
-        if (data.historico.length === 0) {
+        const lista = data.comandos || [];
+        if (lista.length === 0) {
           historicoConteudo.innerHTML = '<p class="empty-state">Nenhum evento registrado ainda.</p>';
         } else {
-          historicoConteudo.innerHTML = data.historico
+          historicoConteudo.innerHTML = lista
             .map(evento => formatarMensagem(evento))
             .join('');
         }
