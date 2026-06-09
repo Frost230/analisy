@@ -1,0 +1,24 @@
+{
+  "name": "roblox-hub-backend",
+  "version": "1.0.0",
+  "description": "API simples para receber e analisar comandos enviados por um script Roblox Hub.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "keywords": [
+    "roblox",
+    "express",
+    "api",
+    "hub"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}

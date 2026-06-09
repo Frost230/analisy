@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Roblox Hub - Painel de Comandos</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: "Inter", "Segoe UI", Arial, sans-serif;
+      background: #000000;
+      color: #f4f4f4;
+      --surface: #0b0b0b;
+      --surface-strong: #121212;
+      --border: rgba(255, 255, 255, 0.08);
+      --text-muted: #8a8a8a;
+      --accent: #e0e0e0;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      background: #000000;
+      color: #f4f4f4;
+    }
+
+    body {
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    .page {
+      width: min(1080px, calc(100% - 2rem));
+      margin: 0 auto;
+      padding: 40px 0 60px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .title {
+      margin: 0;
+      font-size: clamp(2rem, 2.3vw, 2.4rem);
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      color: #ffffff;
+    }
+
+    .subtitle {
+      margin: 14px 0 0;
+      color: var(--text-muted);
+      max-width: 700px;
+    }
+
+    .card,
+    .list-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 24px;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+    }
+
+    .grid {
+      display: grid;
+      gap: 18px;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: 1rem;
+      color: #f5f5f5;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 16px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .button-primary {
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: #121212;
+      color: #f4f4f4;
+      padding: 12px 18px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: transform 0.16s ease, background-color 0.16s ease, border-color 0.16s ease;
+    }
+
+    .button-primary:hover {
+      transform: translateY(-1px);
+      background: #1c1c1c;
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .list-card {
+      min-height: 280px;
+    }
+
+    .list-card h2 {
+      margin: 0 0 14px;
+      font-size: 1.1rem;
+      color: #ffffff;
+    }
+
+    .list-card .empty-state {
+      color: var(--text-muted);
+      line-height: 1.7;
+      margin: 0;
+    }
+
+    .command-item {
+      margin-bottom: 16px;
+      padding: 18px;
+      background: #101010;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .command-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .command-item pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      color: #dee2e6;
+      font-size: 0.94rem;
+    }
+
+    .info-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .info-list code {
+      display: inline-block;
+      background: #101010;
+      padding: 8px 10px;
+      border-radius: 10px;
+      color: #f4f4f4;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    @media (max-width: 560px) {
+      .header {
+        flex-direction: column;
+        gap: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <div>
+        <h1 class="title">Painel de Comandos - Roblox Hub</h1>
+        <p class="subtitle">Monitore os comandos solicitados pelo jogo e verifique quais já foram atendidos. Ideal para acompanhar o fluxo de ações em tempo real.</p>
+      </div>
+      <div class="panel-header">
+        <button class="button-primary" id="refreshButton">Atualizar histórico</button>
+        <span class="status-pill" id="ultimaAtualizacao">Última atualização: nunca</span>
+      </div>
+    </header>
+
+    <section class="grid">
+      <article class="list-card">
+        <h2>Comandos solicitados</h2>
+        <div id="pedidosConteudo" class="empty-state">Carregando histórico...</div>
+      </article>
+
+      <article class="list-card">
+        <h2>Comandos atendidos</h2>
+        <div id="atendidosConteudo" class="empty-state">Carregando histórico...</div>
+      </article>
+
+      <article class="list-card">
+        <h2>Inicializações</h2>
+        <div id="inicializacoesConteudo" class="empty-state">Carregando histórico...</div>
+      </article>
+    </section>
+
+    <section class="card" style="margin-top: 24px;">
+      <div class="panel-header">
+        <h2 class="panel-title">Endpoints disponíveis</h2>
+      </div>
+      <div class="info-list">
+        <code>POST /api/inicializar</code> - enviar JSON com <code>player</code> para registrar a inicialização do script.
+        <code>POST /api/analisar</code> - enviar JSON com <code>player</code> e <code>texto</code> para registrar o comando.
+        <code>GET /api/comandos</code> - obter os comandos pendentes e marcar como atendidos.
+        <code>GET /api/comandos/historico</code> - consultar todo o histórico de pedidos, atendimentos e inicializações.
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const pedidosConteudo = document.getElementById('pedidosConteudo');
+    const atendidosConteudo = document.getElementById('atendidosConteudo');
+    const inicializacoesConteudo = document.getElementById('inicializacoesConteudo');
+    const ultimaAtualizacao = document.getElementById('ultimaAtualizacao');
+    const refreshButton = document.getElementById('refreshButton');
+
+    function formatCommand(cmd) {
+      return `<div class="command-item"><pre>${JSON.stringify(cmd, null, 2)}</pre></div>`;
+    }
+
+    async function carregarHistorico() {
+      try {
+        const response = await fetch('/api/comandos/historico');
+        const data = await response.json();
+
+        if (!data.sucesso) {
+          pedidosConteudo.textContent = 'Falha ao carregar histórico.';
+          atendidosConteudo.textContent = 'Falha ao carregar histórico.';
+          return;
+        }
+
+        pedidosConteudo.innerHTML = data.pedidos.length
+          ? data.pedidos.map(formatCommand).join('')
+          : '<p class="empty-state">Nenhum comando solicitado ainda.</p>';
+
+        atendidosConteudo.innerHTML = data.atendidos.length
+          ? data.atendidos.map(formatCommand).join('')
+          : '<p class="empty-state">Nenhum comando atendido ainda.</p>';
+
+        inicializacoesConteudo.innerHTML = data.inicializacoes.length
+          ? data.inicializacoes.map(formatCommand).join('')
+          : '<p class="empty-state">Nenhuma inicialização registrada ainda.</p>';
+
+        ultimaAtualizacao.textContent = 'Última atualização: ' + new Date().toLocaleTimeString();
+      } catch (error) {
+        pedidosConteudo.textContent = 'Erro ao carregar histórico.';
+        atendidosConteudo.textContent = 'Erro ao carregar histórico.';
+        console.error(error);
+      }
+    }
+
+    refreshButton.addEventListener('click', carregarHistorico);
+    carregarHistorico();
+  </script>
+</body>
+</html>
