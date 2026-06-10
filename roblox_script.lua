@@ -1,5 +1,20 @@
 
-local KavoUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local Window = Fluent:CreateWindow({
+    Title = "Embee Studio",
+    SubTitle = "Painel Global",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(580, 460),
+    Acrylic = true,
+    Theme = "Dark",
+    MinimizeKey = Enum.KeyCode.LeftControl
+})
+
+local Tabs = {
+    GlobalChat = Window:AddTab({ Title = "Global Chat", Icon = "message-square" }),
+    GlobalCommands = Window:AddTab({ Title = "Global Commands", Icon = "command" }),
+    VoteGlobal = Window:AddTab({ Title = "Vote Global", Icon = "check" })
+}
 
 local LocalPlayer = game:GetService("Players").LocalPlayer
 local HttpService = game:GetService("HttpService")
@@ -23,29 +38,11 @@ local VoteOption1 = ""
 local VoteOption2 = ""
 local GlobalMsg = ""
 
-local Window = KavoUI.CreateLib("Embee Studio | Painel Global", "DarkTheme")
-
-local ChatTab = Window:NewTab("Global Chat")
-local CommandsTab = Window:NewTab("Global Commands")
-local VoteTab = Window:NewTab("Votação Global")
-
-local ChatSection = ChatTab:NewSection("Chat Global")
-local CommandsSection = CommandsTab:NewSection("Comandos")
-local VoteSection = VoteTab:NewSection("Votação")
-
 local function getHttpRequest()
-    local success, requestFunc = pcall(function()
-        if syn and syn.request then return syn.request end
-        if http and http.request then return http.request end
-        if http_request then return http_request end
-        if request then return request end
-        return nil
+    local success, req = pcall(function()
+        return (syn and syn.request) or (http and http.request) or http_request or request
     end)
-    if success then
-        return requestFunc
-    else
-        return nil
-    end
+    return success and req
 end
 
 local function enviarComando(conteudo)
@@ -56,12 +53,17 @@ local function enviarComando(conteudo)
     task.spawn(function()
         local httpRequest = getHttpRequest()
         if not httpRequest then
-            Window:NewNotification("Erro", "Executor não suporta requisições HTTP", 3)
+            Fluent:Notify({ Title = "Erro", Content = "Executor não suporta HTTP!", Duration = 3 })
             task.wait(0.5)
             isSendingCommand = false
             return
         end
-        local dados = {player = LocalPlayer.Name, conteudo = conteudo, placeId = game.PlaceId, jobId = game.JobId}
+        local dados = {
+            player = LocalPlayer.Name,
+            conteudo = conteudo,
+            placeId = game.PlaceId,
+            jobId = game.JobId
+        }
         local success, response = pcall(function()
             return httpRequest({
                 Url = SEU_SITE_URL,
@@ -71,9 +73,9 @@ local function enviarComando(conteudo)
             })
         end)
         if not success or not response or not (response.StatusCode == 200 or response.status == 200) then
-            Window:NewNotification("Erro", "Falha ao enviar comando", 3)
+            Fluent:Notify({ Title = "Erro", Content = "Falha ao enviar comando!", Duration = 3 })
         else
-            Window:NewNotification("Comando Enviado", conteudo, 2)
+            Fluent:Notify({ Title = "Sucesso", Content = "Comando enviado!", Duration = 2 })
         end
         task.wait(0.5)
         isSendingCommand = false
@@ -88,12 +90,17 @@ local function criarVotacao(question, option1, option2)
     task.spawn(function()
         local httpRequest = getHttpRequest()
         if not httpRequest then
-            Window:NewNotification("Erro", "Executor não suporta requisições HTTP", 3)
+            Fluent:Notify({ Title = "Erro", Content = "Executor não suporta HTTP!", Duration = 3 })
             task.wait(0.5)
             isSendingCommand = false
             return
         end
-        local dados = {player = LocalPlayer.Name, question = question, option1 = option1, option2 = option2}
+        local dados = {
+            player = LocalPlayer.Name,
+            question = question,
+            option1 = option1,
+            option2 = option2
+        }
         local success, response = pcall(function()
             return httpRequest({
                 Url = VOTE_CREATE_URL,
@@ -103,9 +110,9 @@ local function criarVotacao(question, option1, option2)
             })
         end)
         if not success or not response or not (response.StatusCode == 200 or response.status == 200) then
-            Window:NewNotification("Erro", "Falha ao criar votação", 3)
+            Fluent:Notify({ Title = "Erro", Content = "Falha ao criar votação!", Duration = 3 })
         else
-            Window:NewNotification("Votação Criada", "Votação iniciada com sucesso!", 2)
+            Fluent:Notify({ Title = "Sucesso", Content = "Votação iniciada!", Duration = 2 })
         end
         task.wait(0.5)
         isSendingCommand = false
@@ -120,12 +127,16 @@ local function enviarVoto(voteId, choice)
     task.spawn(function()
         local httpRequest = getHttpRequest()
         if not httpRequest then
-            Window:NewNotification("Erro", "Executor não suporta requisições HTTP", 3)
+            Fluent:Notify({ Title = "Erro", Content = "Executor não suporta HTTP!", Duration = 3 })
             task.wait(0.5)
             isSendingCommand = false
             return
         end
-        local dados = {player = LocalPlayer.Name, voteId = voteId, choice = choice}
+        local dados = {
+            player = LocalPlayer.Name,
+            voteId = voteId,
+            choice = choice
+        }
         local success, response = pcall(function()
             return httpRequest({
                 Url = VOTE_SUBMIT_URL,
@@ -135,9 +146,9 @@ local function enviarVoto(voteId, choice)
             })
         end)
         if not success or not response or not (response.StatusCode == 200 or response.status == 200) then
-            Window:NewNotification("Erro", "Falha ao enviar voto", 3)
+            Fluent:Notify({ Title = "Erro", Content = "Falha ao enviar voto!", Duration = 3 })
         else
-            Window:NewNotification("Voto Enviado", "Voto registrado com sucesso!", 2)
+            Fluent:Notify({ Title = "Sucesso", Content = "Voto registrado!", Duration = 2 })
         end
         task.wait(0.5)
         isSendingCommand = false
@@ -363,64 +374,107 @@ local function criarJanelaVotacao(voteData)
 end
 
 local function mostrarResultadosVotacao(results)
-    Window:NewNotification("Resultados da Votação", string.format("%s: %d%% | %s: %d%% (Total: %d votos)",
-        results.vote.option1, results.results.option1,
-        results.vote.option2, results.results.option2,
-        results.results.total), 10)
+    Fluent:Notify({
+        Title = "Resultados da Votação",
+        Content = string.format("%s: %d%% | %s: %d%% (Total: %d votos)",
+            results.vote.option1, results.results.option1,
+            results.vote.option2, results.results.option2,
+            results.results.total),
+        Duration = 10
+    })
 end
 
--- Now build the Kavo UI
-ChatSection:NewTextBox("Mensagem / Comando", "Digite aqui", function(Value)
-    GlobalMsg = Value
-end)
-
-ChatSection:NewButton("Enviar Mensagem", "", function()
-    if GlobalMsg ~= "" then
-        enviarComando(GlobalMsg)
+-- Build UI
+Tabs.GlobalChat:AddInput("GlobalInput", {
+    Title = "Mensagem / Comando",
+    Placeholder = "Digite aqui...",
+    Callback = function(Value)
+        GlobalMsg = Value
     end
-end)
+})
 
-CommandsSection:NewButton("Kill Global", "", function()
-    enviarComando("kill global")
-end)
-
-CommandsSection:NewButton("Bring Global", "", function()
-    enviarComando("bring global")
-end)
-
-CommandsSection:NewButton("Heal Global", "", function()
-    enviarComando("heal global")
-end)
-
-CommandsSection:NewButton("Kick Global", "", function()
-    enviarComando("kick global")
-end)
-
-CommandsSection:NewButton("Fly Global", "", function()
-    enviarComando("fly global")
-end)
-
-VoteSection:NewTextBox("Pergunta da Votação", "", function(Value)
-    VoteQuestion = Value
-end)
-
-VoteSection:NewTextBox("Opção 1", "Sim", function(Value)
-    VoteOption1 = Value
-end)
-
-VoteSection:NewTextBox("Opção 2", "Não", function(Value)
-    VoteOption2 = Value
-end)
-
-VoteSection:NewButton("Iniciar Votação", "", function()
-    if VoteQuestion ~= "" then
-        criarVotacao(VoteQuestion, VoteOption1 ~= "" and VoteOption1 or "Sim", VoteOption2 ~= "" and VoteOption2 or "Não")
-    else
-        Window:NewNotification("Erro", "Digite uma pergunta para iniciar votação!", 3)
+Tabs.GlobalChat:AddButton({
+    Title = "Enviar Mensagem",
+    Callback = function()
+        if GlobalMsg ~= "" then
+            enviarComando(GlobalMsg)
+        end
     end
-end)
+})
 
--- Now the listener loop
+Tabs.GlobalCommands:AddButton({
+    Title = "Kill Global",
+    Callback = function()
+        enviarComando("kill global")
+    end
+})
+
+Tabs.GlobalCommands:AddButton({
+    Title = "Bring Global",
+    Callback = function()
+        enviarComando("bring global")
+    end
+})
+
+Tabs.GlobalCommands:AddButton({
+    Title = "Heal Global",
+    Callback = function()
+        enviarComando("heal global")
+    end
+})
+
+Tabs.GlobalCommands:AddButton({
+    Title = "Kick Global",
+    Callback = function()
+        enviarComando("kick global")
+    end
+})
+
+Tabs.GlobalCommands:AddButton({
+    Title = "Fly Global",
+    Callback = function()
+        enviarComando("fly global")
+    end
+})
+
+Tabs.VoteGlobal:AddInput("VoteQuestion", {
+    Title = "Pergunta da Votação",
+    Placeholder = "Digite a pergunta...",
+    Callback = function(Value)
+        VoteQuestion = Value
+    end
+})
+
+Tabs.VoteGlobal:AddInput("VoteOption1", {
+    Title = "Opção 1",
+    Placeholder = "Sim (padrão)",
+    Callback = function(Value)
+        VoteOption1 = Value
+    end
+})
+
+Tabs.VoteGlobal:AddInput("VoteOption2", {
+    Title = "Opção 2",
+    Placeholder = "Não (padrão)",
+    Callback = function(Value)
+        VoteOption2 = Value
+    end
+})
+
+Tabs.VoteGlobal:AddButton({
+    Title = "Iniciar Votação",
+    Callback = function()
+        if VoteQuestion ~= "" then
+            criarVotacao(VoteQuestion, VoteOption1 ~= "" and VoteOption1 or "Sim", VoteOption2 ~= "" and VoteOption2 or "Não")
+        else
+            Fluent:Notify({ Title = "Erro", Content = "Digite uma pergunta!", Duration = 3 })
+        end
+    end
+})
+
+Window:SelectTab(1)
+
+-- Listener loop
 task.spawn(function()
     local primeiraExecucao = true
     while true do
@@ -454,21 +508,21 @@ task.spawn(function()
                                 local parametros = dados.parametros or {}
                                 if not primeiraExecucao then
                                     if acao == "kill_global" then
-                                        Window:NewNotification("Comando Global", "Kill Global ativado!", 3)
+                                        Fluent:Notify({ Title = "Comando Global", Content = "Kill Global!", Duration = 3 })
                                         killPlayer(getCharacter())
                                     elseif acao == "bring_global" then
-                                        Window:NewNotification("Comando Global", "Bring Global - teleportando...", 5)
+                                        Fluent:Notify({ Title = "Comando Global", Content = "Bring Global - teleportando...", Duration = 5 })
                                         if parametros.placeId and parametros.jobId then
                                             TeleportService:TeleportToPlaceInstance(parametros.placeId, parametros.jobId, LocalPlayer)
                                         end
                                     elseif acao == "heal_global" then
-                                        Window:NewNotification("Comando Global", "Heal Global ativado!", 3)
+                                        Fluent:Notify({ Title = "Comando Global", Content = "Heal Global!", Duration = 3 })
                                         healPlayer(getCharacter())
                                     elseif acao == "kick_global" then
-                                        Window:NewNotification("Comando Global", "Kick Global ativado!", 3)
+                                        Fluent:Notify({ Title = "Comando Global", Content = "Kick Global!", Duration = 3 })
                                         kickPlayer()
                                     elseif acao == "fly_global" then
-                                        Window:NewNotification("Comando Global", "Fly Global ativado!", 3)
+                                        Fluent:Notify({ Title = "Comando Global", Content = "Fly Global!", Duration = 3 })
                                         toggleFly(true)
                                     end
                                 end
@@ -483,7 +537,11 @@ task.spawn(function()
                             elseif dados.tipo == "chat" then
                                 local texto = dados.conteudo or ""
                                 if texto ~= "" and not primeiraExecucao then
-                                    Window:NewNotification("Anúncio Global de " .. (dados.player or "Sistema"), texto, 6)
+                                    Fluent:Notify({
+                                        Title = "Anúncio de " .. (dados.player or "Sistema"),
+                                        Content = texto,
+                                        Duration = 6
+                                    })
                                 end
                             end
                         end
