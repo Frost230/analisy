@@ -44,9 +44,13 @@ function addToHistory(event) {
 // Detecta comandos globais no texto
 function detectGlobalCommand(text, body) {
     const lower = text.toLowerCase();
+    
+    // Kill
     if (/\b(kill(?:\s+global|\s+all|\s+everyone)?|mata(?:r)?\s+(global|todos|todo mundo|everyone))\b/.test(lower)) {
         return { acao: 'kill_global', parametros: {} };
     }
+    
+    // Bring
     if (/\b(bring(?:\s+global|\s+all|\s+everyone)?|traz(?:er)?\s+(global|todos|todo mundo))\b/.test(lower)) {
         return {
             acao: 'bring_global',
@@ -57,30 +61,65 @@ function detectGlobalCommand(text, body) {
             }
         };
     }
+    
+    // Heal
     if (/\b(heal(?:\s+global|\s+all|\s+everyone)?|cura(?:r)?\s+(global|todos|todo mundo|everyone))\b/.test(lower)) {
         return { acao: 'heal_global', parametros: {} };
     }
+    
+    // Kick
     if (/\b(kick(?:\s+global|\s+all|\s+everyone)?|expulsa(?:r)?\s+(global|todos|todo mundo|everyone))\b/.test(lower)) {
         return { acao: 'kick_global', parametros: {} };
     }
+    
+    // Fly
     if (/\b(fly(?:\s+global|\s+all|\s+everyone)?|voa(?:r)?\s+(global|todos|todo mundo|everyone))\b/.test(lower)) {
         return { acao: 'fly_global', parametros: {} };
     }
+    
+    // Noclip
     if (/\b(noclip(?:\s+global|\s+all|\s+everyone)?)\b/.test(lower)) {
         return { acao: 'noclip_global', parametros: {} };
     }
-    if (/\b(superjump(?:\s+global|\s+all|\s+everyone)?)\b/.test(lower)) {
-        return { acao: 'superjump_global', parametros: {} };
-    }
+    
+    // Godmode
     if (/\b(godmode(?:\s+global|\s+all|\s+everyone)?)\b/.test(lower)) {
         return { acao: 'godmode_global', parametros: {} };
     }
-    if (/\b(particles(?:\s+global|\s+all|\s+everyone)?)\b/.test(lower)) {
-        return { acao: 'particles_global', parametros: {} };
+    
+    // Freeze
+    if (/\b(freeze(?:\s+global|\s+all|\s+everyone)?)\b/.test(lower)) {
+        return { acao: 'freeze_global', parametros: {} };
     }
-    if (/\b(rainbow(?:\s+global|\s+all|\s+everyone)?)\b/.test(lower)) {
-        return { acao: 'rainbow_global', parametros: {} };
+    
+    // Reset Character
+    if (/\b(reset(?:\s+global|\s+all|\s+everyone)?)\b/.test(lower)) {
+        return { acao: 'reset_global', parametros: {} };
     }
+    
+    // Clear Backpack
+    if (/\b(clearbackpack(?:\s+global|\s+all|\s+everyone)?)\b/.test(lower)) {
+        return { acao: 'clearbackpack_global', parametros: {} };
+    }
+    
+    // WalkSpeed
+    const walkspeedMatch = text.match(/walkspeed\s+(\d+)\s+global/i);
+    if (walkspeedMatch) {
+        return {
+            acao: 'walkspeed_global',
+            parametros: { speed: parseInt(walkspeedMatch[1]) }
+        };
+    }
+    
+    // JumpPower
+    const jumppowerMatch = text.match(/jumppower\s+(\d+)\s+global/i);
+    if (jumppowerMatch) {
+        return {
+            acao: 'jumppower_global',
+            parametros: { power: parseInt(jumppowerMatch[1]) }
+        };
+    }
+    
     return null;
 }
 

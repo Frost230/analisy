@@ -4,7 +4,7 @@ local Window = Fluent:CreateWindow({
     Title = "Embee Studio",
     SubTitle = "Painel Global",
     TabWidth = 160,
-    Size = UDim2.fromOffset(600, 500),
+    Size = UDim2.new(0, 600, 0, 550),
     Acrylic = true,
     Theme = "Dark",
     MinimizeKey = Enum.KeyCode.LeftControl
@@ -13,8 +13,7 @@ local Window = Fluent:CreateWindow({
 local Tabs = {
     GlobalChat = Window:AddTab({ Title = "Global Chat", Icon = "message-square" }),
     PlayerCommands = Window:AddTab({ Title = "Player", Icon = "user" }),
-    WorldCommands = Window:AddTab({ Title = "World", Icon = "globe" }),
-    FunCommands = Window:AddTab({ Title = "Fun", Icon = "smile" }),
+    ServerCommands = Window:AddTab({ Title = "Server", Icon = "server" }),
     VoteGlobal = Window:AddTab({ Title = "Vote Global", Icon = "check" })
 }
 
@@ -230,12 +229,6 @@ local function noclipPlayer(enable)
     end
 end
 
-local function superJump(character)
-    if character and character:FindFirstChild("Humanoid") then
-        character.Humanoid.JumpPower = 200
-    end
-end
-
 local function godMode(character)
     if character and character:FindFirstChild("Humanoid") then
         character.Humanoid.MaxHealth = math.huge
@@ -243,34 +236,45 @@ local function godMode(character)
     end
 end
 
-local function spawnParticles(character)
-    if not character then return end
-    local hrp = character:FindFirstChild("HumanoidRootPart")
-    if not hrp then return end
-    local particle = Instance.new("ParticleEmitter")
-    particle.Texture = "rbxassetid://154966922"
-    particle.Rate = 50
-    particle.Lifetime = NumberRange.new(0.5, 1)
-    particle.Speed = NumberRange.new(5, 10)
-    particle.SpreadAngle = Vector2.new(360, 360)
-    particle.Parent = hrp
-    task.delay(5, function()
-        particle:Destroy()
-    end)
+local function freezePlayer(character)
+    if character and character:FindFirstChild("HumanoidRootPart") then
+        local hrp = character.HumanoidRootPart
+        hrp.Anchored = true
+        task.wait(5)
+        hrp.Anchored = false
+    end
 end
 
-local function rainbowCharacter(character)
-    if not character then return end
-    task.spawn(function()
-        for i = 0, 1, 0.01 do
-            for _, part in pairs(character:GetChildren()) do
-                if part:IsA("BasePart") then
-                    part.Color = Color3.fromHSV(i, 1, 1)
-                end
-            end
-            task.wait(0.01)
+local function changeWalkSpeed(character, speed)
+    if character and character:FindFirstChild("Humanoid") then
+        character.Humanoid.WalkSpeed = speed
+    end
+end
+
+local function changeJumpPower(character, power)
+    if character and character:FindFirstChild("Humanoid") then
+        character.Humanoid.JumpPower = power
+    end
+end
+
+local function clearBackpack()
+    if LocalPlayer.Backpack then
+        for _, item in ipairs(LocalPlayer.Backpack:GetChildren()) do
+            item:Destroy()
         end
-    end)
+    end
+    local character = getCharacter()
+    if character then
+        for _, item in ipairs(character:GetChildren()) do
+            if item:IsA("Tool") then
+                item:Destroy()
+            end
+        end
+    end
+end
+
+local function resetCharacter()
+    LocalPlayer:LoadCharacter()
 end
 
 local function createJanelaVotacao(voteData)
@@ -488,6 +492,20 @@ Tabs.PlayerCommands:AddButton({
 })
 
 Tabs.PlayerCommands:AddButton({
+    Title = "Freeze Global (5s)",
+    Callback = function()
+        enviarComando("freeze global")
+    end
+})
+
+Tabs.PlayerCommands:AddButton({
+    Title = "God Mode Global",
+    Callback = function()
+        enviarComando("godmode global")
+    end
+})
+
+Tabs.PlayerCommands:AddButton({
     Title = "Fly Global",
     Callback = function()
         enviarComando("fly global")
@@ -502,46 +520,45 @@ Tabs.PlayerCommands:AddButton({
 })
 
 Tabs.PlayerCommands:AddButton({
-    Title = "Super Jump Global",
+    Title = "Reset Character Global",
     Callback = function()
-        enviarComando("superjump global")
+        enviarComando("reset global")
     end
 })
 
-Tabs.PlayerCommands:AddButton({
-    Title = "God Mode Global",
+-- Server Commands Tab
+Tabs.ServerCommands:AddButton({
+    Title = "Clear Backpack Global",
     Callback = function()
-        enviarComando("godmode global")
+        enviarComando("clearbackpack global")
     end
 })
 
--- World Commands Tab
-Tabs.WorldCommands:AddButton({
-    Title = "Clear Chat Global",
+Tabs.ServerCommands:AddButton({
+    Title = "Set WalkSpeed 50",
     Callback = function()
-        enviarComando("clearchat global")
+        enviarComando("walkspeed 50 global")
     end
 })
 
-Tabs.WorldCommands:AddButton({
-    Title = "Reset Workspace Global",
+Tabs.ServerCommands:AddButton({
+    Title = "Set WalkSpeed 100",
     Callback = function()
-        enviarComando("resetworkspace global")
+        enviarComando("walkspeed 100 global")
     end
 })
 
--- Fun Commands Tab
-Tabs.FunCommands:AddButton({
-    Title = "Particles Global",
+Tabs.ServerCommands:AddButton({
+    Title = "Set JumpPower 100",
     Callback = function()
-        enviarComando("particles global")
+        enviarComando("jumppower 100 global")
     end
 })
 
-Tabs.FunCommands:AddButton({
-    Title = "Rainbow Global",
+Tabs.ServerCommands:AddButton({
+    Title = "Set JumpPower 200",
     Callback = function()
-        enviarComando("rainbow global")
+        enviarComando("jumppower 200 global")
     end
 })
 
@@ -636,18 +653,26 @@ task.spawn(function()
                                     elseif acao == "noclip_global" then
                                         Fluent:Notify({ Title = "Comando Global", Content = "Noclip Global!", Duration = 3 })
                                         noclipPlayer(true)
-                                    elseif acao == "superjump_global" then
-                                        Fluent:Notify({ Title = "Comando Global", Content = "Super Jump Global!", Duration = 3 })
-                                        superJump(getCharacter())
                                     elseif acao == "godmode_global" then
                                         Fluent:Notify({ Title = "Comando Global", Content = "God Mode Global!", Duration = 3 })
                                         godMode(getCharacter())
-                                    elseif acao == "particles_global" then
-                                        Fluent:Notify({ Title = "Comando Global", Content = "Particles Global!", Duration = 3 })
-                                        spawnParticles(getCharacter())
-                                    elseif acao == "rainbow_global" then
-                                        Fluent:Notify({ Title = "Comando Global", Content = "Rainbow Global!", Duration = 3 })
-                                        rainbowCharacter(getCharacter())
+                                    elseif acao == "freeze_global" then
+                                        Fluent:Notify({ Title = "Comando Global", Content = "Freeze Global (5s)!", Duration = 3 })
+                                        freezePlayer(getCharacter())
+                                    elseif acao == "reset_global" then
+                                        Fluent:Notify({ Title = "Comando Global", Content = "Reset Character Global!", Duration = 3 })
+                                        resetCharacter()
+                                    elseif acao == "clearbackpack_global" then
+                                        Fluent:Notify({ Title = "Comando Global", Content = "Clear Backpack Global!", Duration = 3 })
+                                        clearBackpack()
+                                    elseif acao == "walkspeed_global" then
+                                        local speed = parametros.speed or 50
+                                        Fluent:Notify({ Title = "Comando Global", Content = "WalkSpeed Global: " .. speed, Duration = 3 })
+                                        changeWalkSpeed(getCharacter(), speed)
+                                    elseif acao == "jumppower_global" then
+                                        local power = parametros.power or 100
+                                        Fluent:Notify({ Title = "Comando Global", Content = "JumpPower Global: " .. power, Duration = 3 })
+                                        changeJumpPower(getCharacter(), power)
                                     end
                                 end
                             elseif dados.tipo == "vote_start" then
