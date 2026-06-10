@@ -1,19 +1,5 @@
-local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
-local Window = Fluent:CreateWindow({
-    Title = "Embee Studio",
-    SubTitle = "Painel Global",
-    TabWidth = 160,
-    Size = UDim2.fromOffset(580, 460),
-    Acrylic = true,
-    Theme = "Dark",
-    MinimizeKey = Enum.KeyCode.LeftControl
-})
 
-local Tabs = {
-    GlobalChat = Window:AddTab({ Title = "Global Chat", Icon = "message-square" }),
-    GlobalCommands = Window:AddTab({ Title = "Global Commands", Icon = "command" }),
-    VoteGlobal = Window:AddTab({ Title = "Vote Global", Icon = "check" })
-}
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
 
 local LocalPlayer = game:GetService("Players").LocalPlayer
 local HttpService = game:GetService("HttpService")
@@ -32,6 +18,21 @@ local activeVoteWindow = nil
 local activeVote = nil
 local lastVoteId = nil
 local isSendingCommand = false
+local VoteQuestion = ""
+local VoteOption1 = ""
+local VoteOption2 = ""
+local GlobalMsg = ""
+
+local Window = OrionLib:MakeWindow({
+    Name = "Embee Studio | Painel Global",
+    HidePremium = false,
+    SaveConfig = true,
+    ConfigFolder = "EmbeeStudio"
+})
+
+local ChatTab = Window:MakeTab({Name = "Global Chat", Icon = "rbxassetid://4483345998", PremiumOnly = false})
+local CommandsTab = Window:MakeTab({Name = "Global Commands", Icon = "rbxassetid://4483345998", PremiumOnly = false})
+local VoteTab = Window:MakeTab({Name = "Votação Global", Icon = "rbxassetid://4483345998", PremiumOnly = false})
 
 local function httpRequest(options)
     local success, result = pcall(function()
@@ -48,28 +49,20 @@ local function enviarComando(conteudo)
         return
     end
     isSendingCommand = true
-    
     task.spawn(function()
-        local dados = {
-            player = LocalPlayer.Name,
-            conteudo = conteudo,
-            placeId = game.PlaceId,
-            jobId = game.JobId
-        }
+        local dados = {player = LocalPlayer.Name, conteudo = conteudo, placeId = game.PlaceId, jobId = game.JobId}
         local success, response = pcall(function()
             return httpRequest({
                 Url = SEU_SITE_URL,
                 Method = "POST",
-                Headers = {
-                    ["Content-Type"] = "application/json"
-                },
+                Headers = {["Content-Type"] = "application/json"},
                 Body = HttpService:JSONEncode(dados)
             })
         end)
         if not success or not response or not (response.StatusCode == 200 or response.status == 200) then
-            Fluent:Notify({ Title = "Erro", Content = "Falha ao enviar para o servidor.", Duration = 3 })
+            OrionLib:MakeNotification({Name = "Erro", Content = "Falha ao enviar comando", Image = "rbxassetid://4483345998", Time = 3})
         else
-            Fluent:Notify({ Title = "Comando Enviado", Content = conteudo, Duration = 2 })
+            OrionLib:MakeNotification({Name = "Comando Enviado", Content = conteudo, Image = "rbxassetid://4483345998", Time = 2})
         end
         task.wait(0.5)
         isSendingCommand = false
@@ -81,28 +74,20 @@ local function criarVotacao(question, option1, option2)
         return
     end
     isSendingCommand = true
-    
     task.spawn(function()
-        local dados = {
-            player = LocalPlayer.Name,
-            question = question,
-            option1 = option1,
-            option2 = option2
-        }
+        local dados = {player = LocalPlayer.Name, question = question, option1 = option1, option2 = option2}
         local success, response = pcall(function()
             return httpRequest({
                 Url = VOTE_CREATE_URL,
                 Method = "POST",
-                Headers = {
-                    ["Content-Type"] = "application/json"
-                },
+                Headers = {["Content-Type"] = "application/json"},
                 Body = HttpService:JSONEncode(dados)
             })
         end)
         if not success or not response or not (response.StatusCode == 200 or response.status == 200) then
-            Fluent:Notify({ Title = "Erro", Content = "Falha ao criar votação.", Duration = 3 })
+            OrionLib:MakeNotification({Name = "Erro", Content = "Falha ao criar votação", Image = "rbxassetid://4483345998", Time = 3})
         else
-            Fluent:Notify({ Title = "Votação Criada", Content = "Votação iniciada com sucesso!", Duration = 3 })
+            OrionLib:MakeNotification({Name = "Votação Criada", Content = "Votação iniciada com sucesso!", Image = "rbxassetid://4483345998", Time = 2})
         end
         task.wait(0.5)
         isSendingCommand = false
@@ -114,27 +99,20 @@ local function enviarVoto(voteId, choice)
         return
     end
     isSendingCommand = true
-    
     task.spawn(function()
-        local dados = {
-            player = LocalPlayer.Name,
-            voteId = voteId,
-            choice = choice
-        }
+        local dados = {player = LocalPlayer.Name, voteId = voteId, choice = choice}
         local success, response = pcall(function()
             return httpRequest({
                 Url = VOTE_SUBMIT_URL,
                 Method = "POST",
-                Headers = {
-                    ["Content-Type"] = "application/json"
-                },
+                Headers = {["Content-Type"] = "application/json"},
                 Body = HttpService:JSONEncode(dados)
             })
         end)
         if not success or not response or not (response.StatusCode == 200 or response.status == 200) then
-            Fluent:Notify({ Title = "Erro", Content = "Falha ao enviar voto.", Duration = 3 })
+            OrionLib:MakeNotification({Name = "Erro", Content = "Falha ao enviar voto", Image = "rbxassetid://4483345998", Time = 3})
         else
-            Fluent:Notify({ Title = "Voto Enviado", Content = "Voto registrado!", Duration = 2 })
+            OrionLib:MakeNotification({Name = "Voto Enviado", Content = "Voto registrado com sucesso!", Image = "rbxassetid://4483345998", Time = 2})
         end
         task.wait(0.5)
         isSendingCommand = false
@@ -192,10 +170,10 @@ local function toggleFly(enable)
                     moveDirection = moveDirection + camera.CFrame.RightVector
                 end
                 if UserInputService:IsKeyDown(Enum.KeyCode.Space) then
-                    moveDirection = moveDirection + Vector3.new(0, 1, 0)
+                    moveDirection = moveDirection + Vector3.new(0,1,0)
                 end
                 if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then
-                    moveDirection = moveDirection - Vector3.new(0, 1, 0)
+                    moveDirection = moveDirection - Vector3.new(0,1,0)
                 end
                 hrp.Velocity = moveDirection * speed
             end
@@ -220,109 +198,100 @@ local function criarJanelaVotacao(voteData)
 
     local MainFrame = Instance.new("Frame")
     MainFrame.Name = "MainFrame"
-    MainFrame.Size = UDim2.new(0, 450, 0, 320)
-    MainFrame.Position = UDim2.new(0.5, -225, 0.5, -160)
-    MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
+    MainFrame.Size = UDim2.new(0, 400, 0, 280)
+    MainFrame.Position = UDim2.new(0.5, -200, 0.5, -140)
+    MainFrame.BackgroundColor3 = Color3.fromRGB(20,20,35)
     MainFrame.BorderSizePixel = 0
     MainFrame.Parent = ScreenGui
 
     local UICorner = Instance.new("UICorner")
-    UICorner.CornerRadius = UDim.new(0, 16)
+    UICorner.CornerRadius = UDim.new(0,10)
     UICorner.Parent = MainFrame
 
-    local Gradient = Instance.new("UIGradient")
-    Gradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(20, 20, 40)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 15, 30))
-    })
-    Gradient.Rotation = 45
-    Gradient.Parent = MainFrame
+    local Title = Instance.new("TextLabel")
+    Title.Name = "Title"
+    Title.Size = UDim2.new(1,0,0,50)
+    Title.Position = UDim2.new(0,0,0,10)
+    Title.BackgroundTransparency = 1
+    Title.Text = "Votação Global"
+    Title.TextColor3 = Color3.fromRGB(102,126,234)
+    Title.TextSize = 22
+    Title.Font = Enum.Font.GothamBold
+    Title.Parent = MainFrame
 
-    local Stroke = Instance.new("UIStroke")
-    Stroke.Color = Color3.fromRGB(102, 126, 234)
-    Stroke.Thickness = 1.5
-    Stroke.Parent = MainFrame
-
-    local TitleLabel = Instance.new("TextLabel")
-    TitleLabel.Name = "TitleLabel"
-    TitleLabel.Size = UDim2.new(1, 0, 0, 50)
-    TitleLabel.Position = UDim2.new(0, 0, 0, 10)
-    TitleLabel.BackgroundTransparency = 1
-    TitleLabel.Text = "🗳️ Votação Global"
-    TitleLabel.TextColor3 = Color3.fromRGB(102, 126, 234)
-    TitleLabel.TextSize = 26
-    TitleLabel.Font = Enum.Font.GothamBlack
-    TitleLabel.Parent = MainFrame
-
-    local QuestionLabel = Instance.new("TextLabel")
-    QuestionLabel.Name = "QuestionLabel"
-    QuestionLabel.Size = UDim2.new(1, -40, 0, 80)
-    QuestionLabel.Position = UDim2.new(0, 20, 0, 65)
-    QuestionLabel.BackgroundTransparency = 1
-    QuestionLabel.Text = voteData.question
-    QuestionLabel.TextColor3 = Color3.fromRGB(225, 225, 225)
-    QuestionLabel.TextSize = 18
-    QuestionLabel.TextWrapped = true
-    QuestionLabel.TextYAlignment = Enum.TextYAlignment.Top
-    QuestionLabel.Font = Enum.Font.GothamMedium
-    QuestionLabel.Parent = MainFrame
+    local QuestionText = Instance.new("TextLabel")
+    QuestionText.Name = "Question"
+    QuestionText.Size = UDim2.new(1,-40,0,70)
+    QuestionText.Position = UDim2.new(0,20,0,60)
+    QuestionText.BackgroundTransparency = 1
+    QuestionText.Text = voteData.question
+    QuestionText.TextColor3 = Color3.fromRGB(225,225,225)
+    QuestionText.TextSize = 16
+    QuestionText.TextWrapped = true
+    QuestionText.TextYAlignment = Enum.TextYAlignment.Top
+    QuestionText.Font = Enum.Font.Gotham
+    QuestionText.Parent = MainFrame
 
     local TimerLabel = Instance.new("TextLabel")
-    TimerLabel.Name = "TimerLabel"
-    TimerLabel.Size = UDim2.new(1, 0, 0, 30)
-    TimerLabel.Position = UDim2.new(0, 0, 0, 145)
+    TimerLabel.Name = "Timer"
+    TimerLabel.Size = UDim2.new(1,0,0,30)
+    TimerLabel.Position = UDim2.new(0,0,0,135)
     TimerLabel.BackgroundTransparency = 1
-    TimerLabel.Text = "⏱️ 20s"
-    TimerLabel.TextColor3 = Color3.fromRGB(255, 200, 100)
-    TimerLabel.TextSize = 18
-    TimerLabel.Font = Enum.Font.GothamBold
+    TimerLabel.Text = "20 segundos restantes"
+    TimerLabel.TextColor3 = Color3.fromRGB(255,200,100)
+    TimerLabel.TextSize = 14
+    TimerLabel.Font = Enum.Font.GothamSemibold
     TimerLabel.Parent = MainFrame
 
-    local Option1Button = Instance.new("TextButton")
-    Option1Button.Name = "Option1Button"
-    Option1Button.Size = UDim2.new(0.42, 0, 0, 55)
-    Option1Button.Position = UDim2.new(0.05, 0, 0, 185)
-    Option1Button.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
-    Option1Button.Text = voteData.option1
-    Option1Button.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Option1Button.TextSize = 18
-    Option1Button.Font = Enum.Font.GothamBold
-    Option1Button.AutoButtonColor = false
-    Option1Button.Parent = MainFrame
+    local ButtonContainer = Instance.new("Frame")
+    ButtonContainer.Name = "Buttons"
+    ButtonContainer.Size = UDim2.new(1,-40,0,55)
+    ButtonContainer.Position = UDim2.new(0,20,0,175)
+    ButtonContainer.BackgroundTransparency = 1
+    ButtonContainer.Parent = MainFrame
 
-    local Option1Corner = Instance.new("UICorner")
-    Option1Corner.CornerRadius = UDim.new(0, 12)
-    Option1Corner.Parent = Option1Button
+    local Button1 = Instance.new("TextButton")
+    Button1.Name = "Option1"
+    Button1.Size = UDim2.new(0.48,0,1,0)
+    Button1.Position = UDim2.new(0,0,0,0)
+    Button1.BackgroundColor3 = Color3.fromRGB(46,204,113)
+    Button1.Text = voteData.option1
+    Button1.TextColor3 = Color3.fromRGB(255,255,255)
+    Button1.TextSize = 16
+    Button1.Font = Enum.Font.GothamBold
+    Button1.AutoButtonColor = false
+    Button1.Parent = ButtonContainer
 
-    local Option2Button = Instance.new("TextButton")
-    Option2Button.Name = "Option2Button"
-    Option2Button.Size = UDim2.new(0.42, 0, 0, 55)
-    Option2Button.Position = UDim2.new(0.53, 0, 0, 185)
-    Option2Button.BackgroundColor3 = Color3.fromRGB(231, 76, 60)
-    Option2Button.Text = voteData.option2
-    Option2Button.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Option2Button.TextSize = 18
-    Option2Button.Font = Enum.Font.GothamBold
-    Option2Button.AutoButtonColor = false
-    Option2Button.Parent = MainFrame
+    local B1Corner = Instance.new("UICorner")
+    B1Corner.CornerRadius = UDim.new(0,8)
+    B1Corner.Parent = Button1
 
-    local Option2Corner = Instance.new("UICorner")
-    Option2Corner.CornerRadius = UDim.new(0, 12)
-    Option2Corner.Parent = Option2Button
+    local Button2 = Instance.new("TextButton")
+    Button2.Name = "Option2"
+    Button2.Size = UDim2.new(0.48,0,1,0)
+    Button2.Position = UDim2.new(0.52,0,0,0)
+    Button2.BackgroundColor3 = Color3.fromRGB(231,76,60)
+    Button2.Text = voteData.option2
+    Button2.TextColor3 = Color3.fromRGB(255,255,255)
+    Button2.TextSize = 16
+    Button2.Font = Enum.Font.GothamBold
+    Button2.AutoButtonColor = false
+    Button2.Parent = ButtonContainer
+
+    local B2Corner = Instance.new("UICorner")
+    B2Corner.CornerRadius = UDim.new(0,8)
+    B2Corner.Parent = Button2
 
     local voted = false
     local startTime = tick()
-    local timerConnection = nil
+    local timerConnection
 
     local function updateTimer()
         local elapsed = tick() - startTime
         local remaining = math.max(0, 20 - elapsed)
-        TimerLabel.Text = string.format("⏱️ %ds", math.ceil(remaining))
-
+        TimerLabel.Text = string.format("%d segundos restantes", math.ceil(remaining))
         if remaining <= 0 then
-            if timerConnection then
-                timerConnection:Disconnect()
-            end
+            if timerConnection then timerConnection:Disconnect() end
             if activeVoteWindow then
                 activeVoteWindow:Destroy()
                 activeVoteWindow = nil
@@ -333,46 +302,33 @@ local function criarJanelaVotacao(voteData)
 
     timerConnection = RunService.Heartbeat:Connect(updateTimer)
 
-    local function createButtonEffect(button, originalColor)
-        button.MouseEnter:Connect(function()
-            if not voted then
-                button.BackgroundColor3 = Color3.new(
-                    math.min(1, originalColor.R + 0.1),
-                    math.min(1, originalColor.G + 0.1),
-                    math.min(1, originalColor.B + 0.1)
-                )
-            end
-        end)
-        button.MouseLeave:Connect(function()
-            if not voted then
-                button.BackgroundColor3 = originalColor
-            end
-        end)
-    end
+    Button1.MouseEnter:Connect(function() if not voted then Button1.BackgroundColor3 = Color3.fromRGB(50,220,120) end end)
+    Button1.MouseLeave:Connect(function() if not voted then Button1.BackgroundColor3 = Color3.fromRGB(46,204,113) end end)
+    Button2.MouseEnter:Connect(function() if not voted then Button2.BackgroundColor3 = Color3.fromRGB(245,85,70) end end)
+    Button2.MouseLeave:Connect(function() if not voted then Button2.BackgroundColor3 = Color3.fromRGB(231,76,60) end end)
 
-    createButtonEffect(Option1Button, Color3.fromRGB(46, 204, 113))
-    createButtonEffect(Option2Button, Color3.fromRGB(231, 76, 60))
+    Button1.MouseButton1Click:Connect(function()
+        if not voted and activeVote then
+            voted = true
+            enviarVoto(voteData.id, 1)
+            Button1.BackgroundColor3 = Color3.fromRGB(30,130,70)
+            Button1.Text = "Voto Registrado"
+        end
+    end)
 
-    local function onVote(button, choice, color)
-        button.MouseButton1Click:Connect(function()
-            if not voted and activeVote then
-                voted = true
-                enviarVoto(voteData.id, choice)
-                button.BackgroundColor3 = color
-                button.Text = "✓ Voto Registrado!"
-            end
-        end)
-    end
-
-    onVote(Option1Button, 1, Color3.fromRGB(30, 130, 70))
-    onVote(Option2Button, 2, Color3.fromRGB(150, 50, 40))
+    Button2.MouseButton1Click:Connect(function()
+        if not voted and activeVote then
+            voted = true
+            enviarVoto(voteData.id, 2)
+            Button2.BackgroundColor3 = Color3.fromRGB(150,50,40)
+            Button2.Text = "Voto Registrado"
+        end
+    end)
 
     activeVoteWindow = ScreenGui
 
     task.delay(20, function()
-        if timerConnection then
-            timerConnection:Disconnect()
-        end
+        if timerConnection then timerConnection:Disconnect() end
         if activeVoteWindow then
             activeVoteWindow:Destroy()
             activeVoteWindow = nil
@@ -382,25 +338,29 @@ local function criarJanelaVotacao(voteData)
 end
 
 local function mostrarResultadosVotacao(results)
-    Fluent:Notify({
-        Title = "📊 Resultados da Votação",
+    OrionLib:MakeNotification({
+        Name = "Resultados da Votação",
         Content = string.format("%s: %d%% | %s: %d%% (Total: %d votos)",
             results.vote.option1, results.results.option1,
             results.vote.option2, results.results.option2,
             results.results.total),
-        Duration = 10
+        Image = "rbxassetid://4483345998",
+        Time = 10
     })
 end
 
-local GlobalMsg = ""
-Tabs.GlobalChat:AddInput("GlobalInput", {
-    Title = "Mensagem / Comando",
-    Placeholder = "Digite aqui...",
-    Callback = function(Value) GlobalMsg = Value end
+-- Now build the Orion UI
+ChatTab:AddTextbox({
+    Name = "Mensagem / Comando",
+    Default = "",
+    TextDisappear = true,
+    Callback = function(Value)
+        GlobalMsg = Value
+    end
 })
 
-Tabs.GlobalChat:AddButton({
-    Title = "Enviar Mensagem",
+ChatTab:AddButton({
+    Name = "Enviar Mensagem",
     Callback = function()
         if GlobalMsg ~= "" then
             enviarComando(GlobalMsg)
@@ -408,132 +368,87 @@ Tabs.GlobalChat:AddButton({
     end
 })
 
-Tabs.GlobalCommands:AddButton({
-    Title = "Kill Global",
+CommandsTab:AddButton({
+    Name = "Kill Global",
     Callback = function()
         enviarComando("kill global")
     end
 })
 
-Tabs.GlobalCommands:AddButton({
-    Title = "Bring Global",
+CommandsTab:AddButton({
+    Name = "Bring Global",
     Callback = function()
         enviarComando("bring global")
     end
 })
 
-Tabs.GlobalCommands:AddButton({
-    Title = "Heal Global",
+CommandsTab:AddButton({
+    Name = "Heal Global",
     Callback = function()
         enviarComando("heal global")
     end
 })
 
-Tabs.GlobalCommands:AddButton({
-    Title = "Kick Global",
+CommandsTab:AddButton({
+    Name = "Kick Global",
     Callback = function()
         enviarComando("kick global")
     end
 })
 
-Tabs.GlobalCommands:AddButton({
-    Title = "Fly Global",
+CommandsTab:AddButton({
+    Name = "Fly Global",
     Callback = function()
         enviarComando("fly global")
     end
 })
 
-local VoteQuestion = ""
-local VoteOption1 = ""
-local VoteOption2 = ""
-
-Tabs.VoteGlobal:AddInput("VoteQuestion", {
-    Title = "Pergunta da Votação",
-    Placeholder = "Digite a pergunta...",
-    Callback = function(Value) VoteQuestion = Value end
+VoteTab:AddTextbox({
+    Name = "Pergunta da Votação",
+    Default = "",
+    TextDisappear = true,
+    Callback = function(Value)
+        VoteQuestion = Value
+    end
 })
 
-Tabs.VoteGlobal:AddInput("VoteOption1", {
-    Title = "Opção 1",
-    Placeholder = "Sim (padrão)",
-    Callback = function(Value) VoteOption1 = Value end
+VoteTab:AddTextbox({
+    Name = "Opção 1",
+    Default = "Sim",
+    TextDisappear = true,
+    Callback = function(Value)
+        VoteOption1 = Value
+    end
 })
 
-Tabs.VoteGlobal:AddInput("VoteOption2", {
-    Title = "Opção 2",
-    Placeholder = "Não (padrão)",
-    Callback = function(Value) VoteOption2 = Value end
+VoteTab:AddTextbox({
+    Name = "Opção 2",
+    Default = "Não",
+    TextDisappear = true,
+    Callback = function(Value)
+        VoteOption2 = Value
+    end
 })
 
-Tabs.VoteGlobal:AddButton({
-    Title = "Iniciar Votação",
+VoteTab:AddButton({
+    Name = "Iniciar Votação",
     Callback = function()
         if VoteQuestion ~= "" then
             criarVotacao(VoteQuestion, VoteOption1 ~= "" and VoteOption1 or "Sim", VoteOption2 ~= "" and VoteOption2 or "Não")
         else
-            Fluent:Notify({ Title = "Erro", Content = "Digite uma pergunta!", Duration = 3 })
+            OrionLib:MakeNotification({
+                Name = "Erro",
+                Content = "Digite uma pergunta para iniciar votação!",
+                Image = "rbxassetid://4483345998",
+                Time = 3
+            })
         end
     end
 })
 
-Window:SelectTab(1)
-
+-- Now the listener loop
 task.spawn(function()
     local primeiraExecucao = true
-
-    local function processarItemDoSite(dados)
-        if not dados.id then
-            return
-        end
-        if processedEventIds[dados.id] then
-            return
-        end
-        processedEventIds[dados.id] = true
-
-        if dados.tipo == "comando_global" then
-            local acao = dados.acao
-            local parametros = dados.parametros or {}
-
-            if not primeiraExecucao then
-                if acao == "kill_global" then
-                    Fluent:Notify({ Title = "Comando Global", Content = "Kill Global ativado!", Duration = 3 })
-                    killPlayer(getCharacter())
-                elseif acao == "bring_global" then
-                    Fluent:Notify({ Title = "Comando Global", Content = "Bring Global - teleportando...", Duration = 5 })
-                    if parametros.placeId and parametros.jobId then
-                        TeleportService:TeleportToPlaceInstance(parametros.placeId, parametros.jobId, LocalPlayer)
-                    end
-                elseif acao == "heal_global" then
-                    Fluent:Notify({ Title = "Comando Global", Content = "Heal Global ativado!", Duration = 3 })
-                    healPlayer(getCharacter())
-                elseif acao == "kick_global" then
-                    Fluent:Notify({ Title = "Comando Global", Content = "Kick Global ativado!", Duration = 3 })
-                    kickPlayer()
-                elseif acao == "fly_global" then
-                    Fluent:Notify({ Title = "Comando Global", Content = "Fly Global ativado!", Duration = 3 })
-                    toggleFly(true)
-                end
-            end
-        elseif dados.tipo == "vote_start" then
-            if not primeiraExecucao then
-                criarJanelaVotacao(dados.vote)
-            end
-        elseif dados.tipo == "vote_end" then
-            if not primeiraExecucao then
-                mostrarResultadosVotacao(dados)
-            end
-        elseif dados.tipo == "chat" then
-            local texto = dados.conteudo or ""
-            if texto ~= "" and not primeiraExecucao then
-                Fluent:Notify({
-                    Title = "Anúncio Global de " .. (dados.player or "Sistema"),
-                    Content = texto,
-                    Duration = 6
-                })
-            end
-        end
-    end
-
     while true do
         local success, response = pcall(function()
             return httpRequest({
@@ -541,7 +456,6 @@ task.spawn(function()
                 Method = "GET"
             })
         end)
-
         if success and response and (response.StatusCode == 200 or response.status == 200) and response.Body then
             local decodeSuccess, decoded = pcall(function()
                 return HttpService:JSONDecode(response.Body)
@@ -550,16 +464,91 @@ task.spawn(function()
                 local lista = decoded.comandos or decoded
                 if type(lista) == "table" then
                     for i = #lista, 1, -1 do
-                        processarItemDoSite(lista[i])
+                        local dados = lista[i]
+                        if not dados.id then
+                            continue
+                        end
+                        if processedEventIds[dados.id] then
+                            continue
+                        end
+                        processedEventIds[dados.id] = true
+
+                        if dados.tipo == "comando_global" then
+                            local acao = dados.acao
+                            local parametros = dados.parametros or {}
+                            if not primeiraExecucao then
+                                if acao == "kill_global" then
+                                    OrionLib:MakeNotification({
+                                        Name = "Comando Global",
+                                        Content = "Kill Global ativado!",
+                                        Image = "rbxassetid://4483345998",
+                                        Time = 3
+                                    })
+                                    killPlayer(getCharacter())
+                                elseif acao == "bring_global" then
+                                    OrionLib:MakeNotification({
+                                        Name = "Comando Global",
+                                        Content = "Bring Global - teleportando...",
+                                        Image = "rbxassetid://4483345998",
+                                        Time = 5
+                                    })
+                                    if parametros.placeId and parametros.jobId then
+                                        TeleportService:TeleportToPlaceInstance(parametros.placeId, parametros.jobId, LocalPlayer)
+                                    end
+                                elseif acao == "heal_global" then
+                                    OrionLib:MakeNotification({
+                                        Name = "Comando Global",
+                                        Content = "Heal Global ativado!",
+                                        Image = "rbxassetid://4483345998",
+                                        Time = 3
+                                    })
+                                    healPlayer(getCharacter())
+                                elseif acao == "kick_global" then
+                                    OrionLib:MakeNotification({
+                                        Name = "Comando Global",
+                                        Content = "Kick Global ativado!",
+                                        Image = "rbxassetid://4483345998",
+                                        Time = 3
+                                    })
+                                    kickPlayer()
+                                elseif acao == "fly_global" then
+                                    OrionLib:MakeNotification({
+                                        Name = "Comando Global",
+                                        Content = "Fly Global ativado!",
+                                        Image = "rbxassetid://4483345998",
+                                        Time = 3
+                                    })
+                                    toggleFly(true)
+                                end
+                            end
+                        elseif dados.tipo == "vote_start" then
+                            if not primeiraExecucao then
+                                criarJanelaVotacao(dados.vote)
+                            end
+                        elseif dados.tipo == "vote_end" then
+                            if not primeiraExecucao then
+                                mostrarResultadosVotacao(dados)
+                            end
+                        elseif dados.tipo == "chat" then
+                            local texto = dados.conteudo or ""
+                            if texto ~= "" and not primeiraExecucao then
+                                OrionLib:MakeNotification({
+                                    Name = "Anúncio Global de " .. (dados.player or "Sistema"),
+                                    Content = texto,
+                                    Image = "rbxassetid://4483345998",
+                                    Time = 6
+                                })
+                            end
+                        end
                     end
                 end
             end
         end
-
         if primeiraExecucao then
             primeiraExecucao = false
         end
-
         task.wait(1.5)
     end
 end)
+
+OrionLib:Init()
