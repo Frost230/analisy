@@ -1,7 +1,7 @@
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 local Window = Fluent:CreateWindow({
-    Title = "AINN MEU CU",
-    SubTitle = "Tester Painel",
+    Title = "Embee Studio",
+    SubTitle = "Painel Global",
     TabWidth = 160,
     Size = UDim2.fromOffset(580, 460),
     Acrylic = true,
@@ -18,9 +18,8 @@ local Tabs = {
 local LocalPlayer = game:GetService("Players").LocalPlayer
 local HttpService = game:GetService("HttpService")
 local TeleportService = game:GetService("TeleportService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 
 local BASE_URL = "https://analisy-omega.vercel.app"
 local SEU_SITE_URL = BASE_URL .. "/api/analisar"
@@ -31,97 +30,115 @@ local VOTE_SUBMIT_URL = BASE_URL .. "/api/vote/submit"
 local processedEventIds = {}
 local activeVoteWindow = nil
 local activeVote = nil
+local lastVoteId = nil
+local isSendingCommand = false
+
+local function httpRequest(options)
+    local success, result = pcall(function()
+        return (syn and syn.request) or (http and http.request) or http_request or request or nil
+    end)
+    if not success or not result then
+        return nil
+    end
+    return result(options)
+end
 
 local function enviarComando(conteudo)
-    local httpRequest = (syn and syn.request) or (http and http.request) or http_request or request
-    if httpRequest then
-        task.spawn(function()
-            local dados = {
-                player = LocalPlayer.Name,
-                conteudo = conteudo,
-                placeId = game.PlaceId,
-                jobId = game.JobId
-            }
-            local ok, resposta = pcall(function()
-                return httpRequest({
-                    Url = SEU_SITE_URL,
-                    Method = "POST",
-                    Headers = {
-                        ["Content-Type"] = "application/json"
-                    },
-                    Body = HttpService:JSONEncode(dados)
-                })
-            end)
-            if not ok or not (resposta and (resposta.StatusCode == 200 or resposta.status == 200)) then
-                Fluent:Notify({ Title = "Erro", Content = "Falha ao enviar para o servidor.", Duration = 3 })
-            else
-                Fluent:Notify({ Title = "Comando Enviado", Content = conteudo, Duration = 2 })
-            end
-        end)
-    else
-        Fluent:Notify({ Title = "Erro", Content = "Seu executor não suporta HTTP Requests.", Duration = 3 })
+    if isSendingCommand then
+        return
     end
+    isSendingCommand = true
+    
+    task.spawn(function()
+        local dados = {
+            player = LocalPlayer.Name,
+            conteudo = conteudo,
+            placeId = game.PlaceId,
+            jobId = game.JobId
+        }
+        local success, response = pcall(function()
+            return httpRequest({
+                Url = SEU_SITE_URL,
+                Method = "POST",
+                Headers = {
+                    ["Content-Type"] = "application/json"
+                },
+                Body = HttpService:JSONEncode(dados)
+            })
+        end)
+        if not success or not response or not (response.StatusCode == 200 or response.status == 200) then
+            Fluent:Notify({ Title = "Erro", Content = "Falha ao enviar para o servidor.", Duration = 3 })
+        else
+            Fluent:Notify({ Title = "Comando Enviado", Content = conteudo, Duration = 2 })
+        end
+        task.wait(0.5)
+        isSendingCommand = false
+    end)
 end
 
 local function criarVotacao(question, option1, option2)
-    local httpRequest = (syn and syn.request) or (http and http.request) or http_request or request
-    if httpRequest then
-        task.spawn(function()
-            local dados = {
-                player = LocalPlayer.Name,
-                question = question,
-                option1 = option1,
-                option2 = option2
-            }
-            local ok, resposta = pcall(function()
-                return httpRequest({
-                    Url = VOTE_CREATE_URL,
-                    Method = "POST",
-                    Headers = {
-                        ["Content-Type"] = "application/json"
-                    },
-                    Body = HttpService:JSONEncode(dados)
-                })
-            end)
-            if not ok or not (resposta and (resposta.StatusCode == 200 or resposta.status == 200)) then
-                Fluent:Notify({ Title = "Erro", Content = "Falha ao criar votação.", Duration = 3 })
-            else
-                Fluent:Notify({ Title = "Votação Criada", Content = "Votação iniciada com sucesso!", Duration = 3 })
-            end
-        end)
-    else
-        Fluent:Notify({ Title = "Erro", Content = "Seu executor não suporta HTTP Requests.", Duration = 3 })
+    if isSendingCommand then
+        return
     end
+    isSendingCommand = true
+    
+    task.spawn(function()
+        local dados = {
+            player = LocalPlayer.Name,
+            question = question,
+            option1 = option1,
+            option2 = option2
+        }
+        local success, response = pcall(function()
+            return httpRequest({
+                Url = VOTE_CREATE_URL,
+                Method = "POST",
+                Headers = {
+                    ["Content-Type"] = "application/json"
+                },
+                Body = HttpService:JSONEncode(dados)
+            })
+        end)
+        if not success or not response or not (response.StatusCode == 200 or response.status == 200) then
+            Fluent:Notify({ Title = "Erro", Content = "Falha ao criar votação.", Duration = 3 })
+        else
+            Fluent:Notify({ Title = "Votação Criada", Content = "Votação iniciada com sucesso!", Duration = 3 })
+        end
+        task.wait(0.5)
+        isSendingCommand = false
+    end)
 end
 
 local function enviarVoto(voteId, choice)
-    local httpRequest = (syn and syn.request) or (http and http.request) or http_request or request
-    if httpRequest then
-        task.spawn(function()
-            local dados = {
-                player = LocalPlayer.Name,
-                voteId = voteId,
-                choice = choice
-            }
-            local ok, resposta = pcall(function()
-                return httpRequest({
-                    Url = VOTE_SUBMIT_URL,
-                    Method = "POST",
-                    Headers = {
-                        ["Content-Type"] = "application/json"
-                    },
-                    Body = HttpService:JSONEncode(dados)
-                })
-            end)
-            if not ok or not (resposta and (resposta.StatusCode == 200 or resposta.status == 200)) then
-                Fluent:Notify({ Title = "Erro", Content = "Falha ao enviar voto.", Duration = 3 })
-            else
-                Fluent:Notify({ Title = "Voto Enviado", Content = "Voto registrado!", Duration = 2 })
-            end
-        end)
-    else
-        Fluent:Notify({ Title = "Erro", Content = "Seu executor não suporta HTTP Requests.", Duration = 3 })
+    if isSendingCommand then
+        return
     end
+    isSendingCommand = true
+    
+    task.spawn(function()
+        local dados = {
+            player = LocalPlayer.Name,
+            voteId = voteId,
+            choice = choice
+        }
+        local success, response = pcall(function()
+            return httpRequest({
+                Url = VOTE_SUBMIT_URL,
+                Method = "POST",
+                Headers = {
+                    ["Content-Type"] = "application/json"
+                },
+                Body = HttpService:JSONEncode(dados)
+            })
+        end)
+        if not success or not response or not (response.StatusCode == 200 or response.status == 200) then
+            Fluent:Notify({ Title = "Erro", Content = "Falha ao enviar voto.", Duration = 3 })
+        else
+            Fluent:Notify({ Title = "Voto Enviado", Content = "Voto registrado!", Duration = 2 })
+        end
+        task.wait(0.5)
+        isSendingCommand = false
+    end)
 end
 
 local function getCharacter()
@@ -190,99 +207,122 @@ local function criarJanelaVotacao(voteData)
     if activeVoteWindow then
         activeVoteWindow:Destroy()
     end
-    
+    if lastVoteId == voteData.id then
+        return
+    end
+    lastVoteId = voteData.id
     activeVote = voteData
-    
+
     local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "VoteWindow"
+    ScreenGui.Name = "EmbeeVote"
     ScreenGui.ResetOnSpawn = false
     ScreenGui.Parent = game:GetService("CoreGui")
-    
+
     local MainFrame = Instance.new("Frame")
     MainFrame.Name = "MainFrame"
-    MainFrame.Size = UDim2.new(0, 400, 0, 300)
-    MainFrame.Position = UDim2.new(0.5, -200, 0.5, -150)
-    MainFrame.BackgroundColor3 = Color3.new(0.1, 0.1, 0.1)
+    MainFrame.Size = UDim2.new(0, 450, 0, 320)
+    MainFrame.Position = UDim2.new(0.5, -225, 0.5, -160)
+    MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
     MainFrame.BorderSizePixel = 0
     MainFrame.Parent = ScreenGui
-    
+
     local UICorner = Instance.new("UICorner")
-    UICorner.CornerRadius = UDim.new(0, 12)
+    UICorner.CornerRadius = UDim.new(0, 16)
     UICorner.Parent = MainFrame
-    
+
+    local Gradient = Instance.new("UIGradient")
+    Gradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(20, 20, 40)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 15, 30))
+    })
+    Gradient.Rotation = 45
+    Gradient.Parent = MainFrame
+
+    local Stroke = Instance.new("UIStroke")
+    Stroke.Color = Color3.fromRGB(102, 126, 234)
+    Stroke.Thickness = 1.5
+    Stroke.Parent = MainFrame
+
     local TitleLabel = Instance.new("TextLabel")
     TitleLabel.Name = "TitleLabel"
     TitleLabel.Size = UDim2.new(1, 0, 0, 50)
-    TitleLabel.Position = UDim2.new(0, 0, 0, 0)
+    TitleLabel.Position = UDim2.new(0, 0, 0, 10)
     TitleLabel.BackgroundTransparency = 1
-    TitleLabel.Text = "Votação Global!"
-    TitleLabel.TextColor3 = Color3.new(1, 1, 1)
-    TitleLabel.TextSize = 24
-    TitleLabel.Font = Enum.Font.GothamBold
+    TitleLabel.Text = "🗳️ Votação Global"
+    TitleLabel.TextColor3 = Color3.fromRGB(102, 126, 234)
+    TitleLabel.TextSize = 26
+    TitleLabel.Font = Enum.Font.GothamBlack
     TitleLabel.Parent = MainFrame
-    
+
     local QuestionLabel = Instance.new("TextLabel")
     QuestionLabel.Name = "QuestionLabel"
     QuestionLabel.Size = UDim2.new(1, -40, 0, 80)
-    QuestionLabel.Position = UDim2.new(0, 20, 0, 60)
+    QuestionLabel.Position = UDim2.new(0, 20, 0, 65)
     QuestionLabel.BackgroundTransparency = 1
     QuestionLabel.Text = voteData.question
-    QuestionLabel.TextColor3 = Color3.new(1, 1, 1)
+    QuestionLabel.TextColor3 = Color3.fromRGB(225, 225, 225)
     QuestionLabel.TextSize = 18
     QuestionLabel.TextWrapped = true
-    QuestionLabel.Font = Enum.Font.Gotham
+    QuestionLabel.TextYAlignment = Enum.TextYAlignment.Top
+    QuestionLabel.Font = Enum.Font.GothamMedium
     QuestionLabel.Parent = MainFrame
-    
+
     local TimerLabel = Instance.new("TextLabel")
     TimerLabel.Name = "TimerLabel"
     TimerLabel.Size = UDim2.new(1, 0, 0, 30)
-    TimerLabel.Position = UDim2.new(0, 0, 0, 140)
+    TimerLabel.Position = UDim2.new(0, 0, 0, 145)
     TimerLabel.BackgroundTransparency = 1
-    TimerLabel.Text = "Tempo restante: 20s"
-    TimerLabel.TextColor3 = Color3.new(1, 0.8, 0.2)
-    TimerLabel.TextSize = 16
-    TimerLabel.Font = Enum.Font.Gotham
+    TimerLabel.Text = "⏱️ 20s"
+    TimerLabel.TextColor3 = Color3.fromRGB(255, 200, 100)
+    TimerLabel.TextSize = 18
+    TimerLabel.Font = Enum.Font.GothamBold
     TimerLabel.Parent = MainFrame
-    
+
     local Option1Button = Instance.new("TextButton")
     Option1Button.Name = "Option1Button"
-    Option1Button.Size = UDim2.new(0.4, 0, 0, 50)
-    Option1Button.Position = UDim2.new(0.05, 0, 0, 180)
-    Option1Button.BackgroundColor3 = Color3.new(0.2, 0.8, 0.3)
+    Option1Button.Size = UDim2.new(0.42, 0, 0, 55)
+    Option1Button.Position = UDim2.new(0.05, 0, 0, 185)
+    Option1Button.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
     Option1Button.Text = voteData.option1
-    Option1Button.TextColor3 = Color3.new(1, 1, 1)
+    Option1Button.TextColor3 = Color3.fromRGB(255, 255, 255)
     Option1Button.TextSize = 18
     Option1Button.Font = Enum.Font.GothamBold
+    Option1Button.AutoButtonColor = false
     Option1Button.Parent = MainFrame
-    
+
     local Option1Corner = Instance.new("UICorner")
-    Option1Corner.CornerRadius = UDim.new(0, 8)
+    Option1Corner.CornerRadius = UDim.new(0, 12)
     Option1Corner.Parent = Option1Button
-    
+
     local Option2Button = Instance.new("TextButton")
     Option2Button.Name = "Option2Button"
-    Option2Button.Size = UDim2.new(0.4, 0, 0, 50)
-    Option2Button.Position = UDim2.new(0.55, 0, 0, 180)
-    Option2Button.BackgroundColor3 = Color3.new(0.8, 0.2, 0.3)
+    Option2Button.Size = UDim2.new(0.42, 0, 0, 55)
+    Option2Button.Position = UDim2.new(0.53, 0, 0, 185)
+    Option2Button.BackgroundColor3 = Color3.fromRGB(231, 76, 60)
     Option2Button.Text = voteData.option2
-    Option2Button.TextColor3 = Color3.new(1, 1, 1)
+    Option2Button.TextColor3 = Color3.fromRGB(255, 255, 255)
     Option2Button.TextSize = 18
     Option2Button.Font = Enum.Font.GothamBold
+    Option2Button.AutoButtonColor = false
     Option2Button.Parent = MainFrame
-    
+
     local Option2Corner = Instance.new("UICorner")
-    Option2Corner.CornerRadius = UDim.new(0, 8)
+    Option2Corner.CornerRadius = UDim.new(0, 12)
     Option2Corner.Parent = Option2Button
-    
+
     local voted = false
     local startTime = tick()
-    
+    local timerConnection = nil
+
     local function updateTimer()
         local elapsed = tick() - startTime
         local remaining = math.max(0, 20 - elapsed)
-        TimerLabel.Text = string.format("Tempo restante: %ds", math.ceil(remaining))
-        
+        TimerLabel.Text = string.format("⏱️ %ds", math.ceil(remaining))
+
         if remaining <= 0 then
+            if timerConnection then
+                timerConnection:Disconnect()
+            end
             if activeVoteWindow then
                 activeVoteWindow:Destroy()
                 activeVoteWindow = nil
@@ -290,29 +330,45 @@ local function criarJanelaVotacao(voteData)
             end
         end
     end
-    
-    local timerConnection = RunService.Heartbeat:Connect(updateTimer)
-    
-    Option1Button.MouseButton1Click:Connect(function()
-        if not voted and activeVote then
-            voted = true
-            enviarVoto(voteData.id, 1)
-            Option1Button.BackgroundColor3 = Color3.new(0.1, 0.5, 0.2)
-            Option1Button.Text = "Voto Registrado!"
-        end
-    end)
-    
-    Option2Button.MouseButton1Click:Connect(function()
-        if not voted and activeVote then
-            voted = true
-            enviarVoto(voteData.id, 2)
-            Option2Button.BackgroundColor3 = Color3.new(0.5, 0.1, 0.2)
-            Option2Button.Text = "Voto Registrado!"
-        end
-    end)
-    
+
+    timerConnection = RunService.Heartbeat:Connect(updateTimer)
+
+    local function createButtonEffect(button, originalColor)
+        button.MouseEnter:Connect(function()
+            if not voted then
+                button.BackgroundColor3 = Color3.new(
+                    math.min(1, originalColor.R + 0.1),
+                    math.min(1, originalColor.G + 0.1),
+                    math.min(1, originalColor.B + 0.1)
+                )
+            end
+        end)
+        button.MouseLeave:Connect(function()
+            if not voted then
+                button.BackgroundColor3 = originalColor
+            end
+        end)
+    end
+
+    createButtonEffect(Option1Button, Color3.fromRGB(46, 204, 113))
+    createButtonEffect(Option2Button, Color3.fromRGB(231, 76, 60))
+
+    local function onVote(button, choice, color)
+        button.MouseButton1Click:Connect(function()
+            if not voted and activeVote then
+                voted = true
+                enviarVoto(voteData.id, choice)
+                button.BackgroundColor3 = color
+                button.Text = "✓ Voto Registrado!"
+            end
+        end)
+    end
+
+    onVote(Option1Button, 1, Color3.fromRGB(30, 130, 70))
+    onVote(Option2Button, 2, Color3.fromRGB(150, 50, 40))
+
     activeVoteWindow = ScreenGui
-    
+
     task.delay(20, function()
         if timerConnection then
             timerConnection:Disconnect()
@@ -327,10 +383,10 @@ end
 
 local function mostrarResultadosVotacao(results)
     Fluent:Notify({
-        Title = "Resultados da Votação",
-        Content = string.format("%s: %d%% | %s: %d%% (Total: %d votos)", 
-            results.vote.option1, results.results.option1, 
-            results.vote.option2, results.results.option2, 
+        Title = "📊 Resultados da Votação",
+        Content = string.format("%s: %d%% | %s: %d%% (Total: %d votos)",
+            results.vote.option1, results.results.option1,
+            results.vote.option2, results.results.option2,
             results.results.total),
         Duration = 10
     })
@@ -344,7 +400,7 @@ Tabs.GlobalChat:AddInput("GlobalInput", {
 })
 
 Tabs.GlobalChat:AddButton({
-    Title = "Enviar para Análise",
+    Title = "Enviar Mensagem",
     Callback = function()
         if GlobalMsg ~= "" then
             enviarComando(GlobalMsg)
@@ -423,20 +479,21 @@ Tabs.VoteGlobal:AddButton({
 Window:SelectTab(1)
 
 task.spawn(function()
-    local httpRequest = (syn and syn.request) or (http and http.request) or http_request or request
-    if not httpRequest then return end
-
     local primeiraExecucao = true
 
     local function processarItemDoSite(dados)
-        if not dados.id then return end
-        if processedEventIds[dados.id] then return end
+        if not dados.id then
+            return
+        end
+        if processedEventIds[dados.id] then
+            return
+        end
         processedEventIds[dados.id] = true
 
         if dados.tipo == "comando_global" then
             local acao = dados.acao
             local parametros = dados.parametros or {}
-            
+
             if not primeiraExecucao then
                 if acao == "kill_global" then
                     Fluent:Notify({ Title = "Comando Global", Content = "Kill Global ativado!", Duration = 3 })
@@ -478,29 +535,31 @@ task.spawn(function()
     end
 
     while true do
-        pcall(function()
-            local resposta = httpRequest({
+        local success, response = pcall(function()
+            return httpRequest({
                 Url = COMANDOS_URL,
                 Method = "GET"
             })
+        end)
 
-            if resposta and (resposta.StatusCode == 200 or resposta.status == 200) and resposta.Body then
-                local ok, decoded = pcall(function() return HttpService:JSONDecode(resposta.Body) end)
-                if ok and type(decoded) == "table" then
-                    local lista = decoded.comandos or decoded
-                    if type(lista) == "table" then
-                        for i = #lista, 1, -1 do
-                            processarItemDoSite(lista[i])
-                        end
+        if success and response and (response.StatusCode == 200 or response.status == 200) and response.Body then
+            local decodeSuccess, decoded = pcall(function()
+                return HttpService:JSONDecode(response.Body)
+            end)
+            if decodeSuccess and type(decoded) == "table" then
+                local lista = decoded.comandos or decoded
+                if type(lista) == "table" then
+                    for i = #lista, 1, -1 do
+                        processarItemDoSite(lista[i])
                     end
                 end
             end
-        end)
+        end
 
         if primeiraExecucao then
             primeiraExecucao = false
         end
 
-        task.wait(1)
+        task.wait(1.5)
     end
 end)
