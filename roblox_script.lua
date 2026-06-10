@@ -34,14 +34,19 @@ local ChatTab = Window:MakeTab({Name = "Global Chat", Icon = "rbxassetid://44833
 local CommandsTab = Window:MakeTab({Name = "Global Commands", Icon = "rbxassetid://4483345998", PremiumOnly = false})
 local VoteTab = Window:MakeTab({Name = "Votação Global", Icon = "rbxassetid://4483345998", PremiumOnly = false})
 
-local function httpRequest(options)
-    local success, result = pcall(function()
-        return (syn and syn.request) or (http and http.request) or http_request or request or nil
+local function getHttpRequest()
+    local success, requestFunc = pcall(function()
+        if syn and syn.request then return syn.request end
+        if http and http.request then return http.request end
+        if http_request then return http_request end
+        if request then return request end
+        return nil
     end)
-    if not success or not result then
+    if success then
+        return requestFunc
+    else
         return nil
     end
-    return result(options)
 end
 
 local function enviarComando(conteudo)
@@ -50,6 +55,13 @@ local function enviarComando(conteudo)
     end
     isSendingCommand = true
     task.spawn(function()
+        local httpRequest = getHttpRequest()
+        if not httpRequest then
+            OrionLib:MakeNotification({Name = "Erro", Content = "Executor não suporta requisições HTTP", Image = "rbxassetid://4483345998", Time = 3})
+            task.wait(0.5)
+            isSendingCommand = false
+            return
+        end
         local dados = {player = LocalPlayer.Name, conteudo = conteudo, placeId = game.PlaceId, jobId = game.JobId}
         local success, response = pcall(function()
             return httpRequest({
@@ -75,6 +87,13 @@ local function criarVotacao(question, option1, option2)
     end
     isSendingCommand = true
     task.spawn(function()
+        local httpRequest = getHttpRequest()
+        if not httpRequest then
+            OrionLib:MakeNotification({Name = "Erro", Content = "Executor não suporta requisições HTTP", Image = "rbxassetid://4483345998", Time = 3})
+            task.wait(0.5)
+            isSendingCommand = false
+            return
+        end
         local dados = {player = LocalPlayer.Name, question = question, option1 = option1, option2 = option2}
         local success, response = pcall(function()
             return httpRequest({
@@ -100,6 +119,13 @@ local function enviarVoto(voteId, choice)
     end
     isSendingCommand = true
     task.spawn(function()
+        local httpRequest = getHttpRequest()
+        if not httpRequest then
+            OrionLib:MakeNotification({Name = "Erro", Content = "Executor não suporta requisições HTTP", Image = "rbxassetid://4483345998", Time = 3})
+            task.wait(0.5)
+            isSendingCommand = false
+            return
+        end
         local dados = {player = LocalPlayer.Name, voteId = voteId, choice = choice}
         local success, response = pcall(function()
             return httpRequest({
@@ -450,94 +476,97 @@ VoteTab:AddButton({
 task.spawn(function()
     local primeiraExecucao = true
     while true do
-        local success, response = pcall(function()
-            return httpRequest({
-                Url = COMANDOS_URL,
-                Method = "GET"
-            })
-        end)
-        if success and response and (response.StatusCode == 200 or response.status == 200) and response.Body then
-            local decodeSuccess, decoded = pcall(function()
-                return HttpService:JSONDecode(response.Body)
+        local httpRequest = getHttpRequest()
+        if httpRequest then
+            local success, response = pcall(function()
+                return httpRequest({
+                    Url = COMANDOS_URL,
+                    Method = "GET"
+                })
             end)
-            if decodeSuccess and type(decoded) == "table" then
-                local lista = decoded.comandos or decoded
-                if type(lista) == "table" then
-                    for i = #lista, 1, -1 do
-                        local dados = lista[i]
-                        if not dados.id then
-                            continue
-                        end
-                        if processedEventIds[dados.id] then
-                            continue
-                        end
-                        processedEventIds[dados.id] = true
+            if success and response and (response.StatusCode == 200 or response.status == 200) and response.Body then
+                local decodeSuccess, decoded = pcall(function()
+                    return HttpService:JSONDecode(response.Body)
+                end)
+                if decodeSuccess and type(decoded) == "table" then
+                    local lista = decoded.comandos or decoded
+                    if type(lista) == "table" then
+                        for i = #lista, 1, -1 do
+                            local dados = lista[i]
+                            if not dados.id then
+                                continue
+                            end
+                            if processedEventIds[dados.id] then
+                                continue
+                            end
+                            processedEventIds[dados.id] = true
 
-                        if dados.tipo == "comando_global" then
-                            local acao = dados.acao
-                            local parametros = dados.parametros or {}
-                            if not primeiraExecucao then
-                                if acao == "kill_global" then
-                                    OrionLib:MakeNotification({
-                                        Name = "Comando Global",
-                                        Content = "Kill Global ativado!",
-                                        Image = "rbxassetid://4483345998",
-                                        Time = 3
-                                    })
-                                    killPlayer(getCharacter())
-                                elseif acao == "bring_global" then
-                                    OrionLib:MakeNotification({
-                                        Name = "Comando Global",
-                                        Content = "Bring Global - teleportando...",
-                                        Image = "rbxassetid://4483345998",
-                                        Time = 5
-                                    })
-                                    if parametros.placeId and parametros.jobId then
-                                        TeleportService:TeleportToPlaceInstance(parametros.placeId, parametros.jobId, LocalPlayer)
+                            if dados.tipo == "comando_global" then
+                                local acao = dados.acao
+                                local parametros = dados.parametros or {}
+                                if not primeiraExecucao then
+                                    if acao == "kill_global" then
+                                        OrionLib:MakeNotification({
+                                            Name = "Comando Global",
+                                            Content = "Kill Global ativado!",
+                                            Image = "rbxassetid://4483345998",
+                                            Time = 3
+                                        })
+                                        killPlayer(getCharacter())
+                                    elseif acao == "bring_global" then
+                                        OrionLib:MakeNotification({
+                                            Name = "Comando Global",
+                                            Content = "Bring Global - teleportando...",
+                                            Image = "rbxassetid://4483345998",
+                                            Time = 5
+                                        })
+                                        if parametros.placeId and parametros.jobId then
+                                            TeleportService:TeleportToPlaceInstance(parametros.placeId, parametros.jobId, LocalPlayer)
+                                        end
+                                    elseif acao == "heal_global" then
+                                        OrionLib:MakeNotification({
+                                            Name = "Comando Global",
+                                            Content = "Heal Global ativado!",
+                                            Image = "rbxassetid://4483345998",
+                                            Time = 3
+                                        })
+                                        healPlayer(getCharacter())
+                                    elseif acao == "kick_global" then
+                                        OrionLib:MakeNotification({
+                                            Name = "Comando Global",
+                                            Content = "Kick Global ativado!",
+                                            Image = "rbxassetid://4483345998",
+                                            Time = 3
+                                        })
+                                        kickPlayer()
+                                    elseif acao == "fly_global" then
+                                        OrionLib:MakeNotification({
+                                            Name = "Comando Global",
+                                            Content = "Fly Global ativado!",
+                                            Image = "rbxassetid://4483345998",
+                                            Time = 3
+                                        })
+                                        toggleFly(true)
                                     end
-                                elseif acao == "heal_global" then
-                                    OrionLib:MakeNotification({
-                                        Name = "Comando Global",
-                                        Content = "Heal Global ativado!",
-                                        Image = "rbxassetid://4483345998",
-                                        Time = 3
-                                    })
-                                    healPlayer(getCharacter())
-                                elseif acao == "kick_global" then
-                                    OrionLib:MakeNotification({
-                                        Name = "Comando Global",
-                                        Content = "Kick Global ativado!",
-                                        Image = "rbxassetid://4483345998",
-                                        Time = 3
-                                    })
-                                    kickPlayer()
-                                elseif acao == "fly_global" then
-                                    OrionLib:MakeNotification({
-                                        Name = "Comando Global",
-                                        Content = "Fly Global ativado!",
-                                        Image = "rbxassetid://4483345998",
-                                        Time = 3
-                                    })
-                                    toggleFly(true)
                                 end
-                            end
-                        elseif dados.tipo == "vote_start" then
-                            if not primeiraExecucao then
-                                criarJanelaVotacao(dados.vote)
-                            end
-                        elseif dados.tipo == "vote_end" then
-                            if not primeiraExecucao then
-                                mostrarResultadosVotacao(dados)
-                            end
-                        elseif dados.tipo == "chat" then
-                            local texto = dados.conteudo or ""
-                            if texto ~= "" and not primeiraExecucao then
-                                OrionLib:MakeNotification({
-                                    Name = "Anúncio Global de " .. (dados.player or "Sistema"),
-                                    Content = texto,
-                                    Image = "rbxassetid://4483345998",
-                                    Time = 6
-                                })
+                            elseif dados.tipo == "vote_start" then
+                                if not primeiraExecucao then
+                                    criarJanelaVotacao(dados.vote)
+                                end
+                            elseif dados.tipo == "vote_end" then
+                                if not primeiraExecucao then
+                                    mostrarResultadosVotacao(dados)
+                                end
+                            elseif dados.tipo == "chat" then
+                                local texto = dados.conteudo or ""
+                                if texto ~= "" and not primeiraExecucao then
+                                    OrionLib:MakeNotification({
+                                        Name = "Anúncio Global de " .. (dados.player or "Sistema"),
+                                        Content = texto,
+                                        Image = "rbxassetid://4483345998",
+                                        Time = 6
+                                    })
+                                end
                             end
                         end
                     end
