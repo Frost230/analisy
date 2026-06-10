@@ -1,315 +1,426 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Roblox Hub - Painel de Comandos</title>
-  <style>
-    :root {
-      color-scheme: dark;
-      font-family: "Inter", "Segoe UI", Arial, sans-serif;
-      background: #000000;
-      color: #f4f4f4;
-      --surface: #0b0b0b;
-      --surface-strong: #121212;
-      --border: rgba(255, 255, 255, 0.08);
-      --text-muted: #8a8a8a;
-      --accent: #e0e0e0;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Embee Studio - Painel de Controle</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    * {
-      box-sizing: border-box;
-    }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 50%, #16213e 100%);
+            min-height: 100vh;
+            color: #ffffff;
+        }
 
-    html,
-    body {
-      margin: 0;
-      min-height: 100%;
-      background: #000000;
-      color: #f4f4f4;
-    }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
 
-    body {
-      font-size: 16px;
-      line-height: 1.6;
-    }
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+            padding: 40px 0;
+        }
 
-    .page {
-      width: min(1080px, calc(100% - 2rem));
-      margin: 0 auto;
-      padding: 40px 0 60px;
-    }
+        .logo {
+            font-size: 48px;
+            font-weight: 800;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
 
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 16px;
-      margin-bottom: 28px;
-    }
+        .subtitle {
+            font-size: 18px;
+            color: #9ca3af;
+            margin-bottom: 20px;
+        }
 
-    .title {
-      margin: 0;
-      font-size: clamp(2rem, 2.3vw, 2.4rem);
-      font-weight: 700;
-      letter-spacing: -0.04em;
-      color: #ffffff;
-    }
+        .credits {
+            font-size: 14px;
+            color: #6b7280;
+            background: rgba(102, 126, 234, 0.1);
+            display: inline-block;
+            padding: 10px 24px;
+            border-radius: 20px;
+            border: 1px solid rgba(102, 126, 234, 0.3);
+        }
 
-    .subtitle {
-      margin: 14px 0 0;
-      color: var(--text-muted);
-      max-width: 700px;
-    }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+        }
 
-    .card,
-    .list-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 24px;
-      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
-    }
+        .card {
+            background: rgba(30, 30, 50, 0.8);
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
 
-    .grid {
-      display: grid;
-      gap: 18px;
-      grid-template-columns: 1fr;
-    }
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(102, 126, 234, 0.5);
+            box-shadow: 0 20px 40px rgba(102, 126, 234, 0.2);
+        }
 
-    .panel-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
+        .card-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #667eea;
+        }
 
-    .panel-title {
-      margin: 0;
-      font-size: 1rem;
-      color: #f5f5f5;
-    }
+        .card-description {
+            color: #9ca3af;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
 
-    .status-pill {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 10px 16px;
-      border-radius: 12px;
-      background: rgba(255, 255, 255, 0.05);
-      color: var(--text-muted);
-      font-size: 0.95rem;
-      border: 1px solid rgba(255, 255, 255, 0.06);
-    }
+        .feature-list {
+            list-style: none;
+        }
 
-    .button-primary {
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      background: #121212;
-      color: #f4f4f4;
-      padding: 12px 18px;
-      border-radius: 12px;
-      cursor: pointer;
-      font-weight: 600;
-      transition: transform 0.16s ease, background-color 0.16s ease, border-color 0.16s ease;
-    }
+        .feature-list li {
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
 
-    .button-primary:hover {
-      transform: translateY(-1px);
-      background: #1c1c1c;
-      border-color: rgba(255, 255, 255, 0.15);
-    }
+        .feature-list li:last-child {
+            border-bottom: none;
+        }
 
-    .list-card {
-      min-height: auto;
-    }
+        .feature-icon {
+            width: 8px;
+            height: 8px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+        }
 
-    .list-card h2 {
-      margin: 0 0 14px;
-      font-size: 1.1rem;
-      color: #ffffff;
-    }
+        .events-section {
+            margin-top: 40px;
+        }
 
-    .list-card .empty-state {
-      color: var(--text-muted);
-      line-height: 1.7;
-      margin: 0;
-    }
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
 
-    .event-message {
-      margin-bottom: 12px;
-      padding: 14px;
-      background: #0f0f0f;
-      border-left: 3px solid #e0e0e0;
-      border-radius: 6px;
-    }
+        .section-title {
+            font-size: 28px;
+            font-weight: 700;
+        }
 
-    .event-message:last-child {
-      margin-bottom: 0;
-    }
+        .refresh-btn {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
 
-    .event-message.command {
-      border-left-color: #8a8a8a;
-    }
+        .refresh-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
 
-    .event-message.init {
-      border-left-color: #7a7a7a;
-    }
+        .refresh-btn:active {
+            transform: scale(0.95);
+        }
 
-    .event-player {
-      color: #ffffff;
-      font-weight: 600;
-    }
+        #historicoConteudo {
+            background: rgba(20, 20, 35, 0.9);
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            border-radius: 16px;
+            padding: 30px;
+            min-height: 400px;
+        }
 
-    .event-action {
-      color: var(--text-muted);
-    }
+        .event-message {
+            background: rgba(102, 126, 234, 0.1);
+            border-left: 4px solid #667eea;
+            padding: 16px 20px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            transition: all 0.2s ease;
+        }
 
-    .event-time {
-      display: block;
-      margin-top: 8px;
-      font-size: 0.85rem;
-      color: var(--text-muted);
-    }
+        .event-message:hover {
+            background: rgba(102, 126, 234, 0.2);
+        }
 
-    .info-list {
-      display: grid;
-      gap: 10px;
-      margin-top: 18px;
-    }
+        .event-message.init {
+            border-left-color: #764ba2;
+        }
 
-    .info-list code {
-      display: inline-block;
-      background: #101010;
-      padding: 8px 10px;
-      border-radius: 10px;
-      color: #f4f4f4;
-      border: 1px solid rgba(255, 255, 255, 0.06);
-    }
+        .event-message.command {
+            border-left-color: #f472b6;
+        }
 
-    @media (max-width: 560px) {
-      .header {
-        flex-direction: column;
-        gap: 14px;
-      }
-    }
-  </style>
+        .event-player {
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .event-action {
+            color: #d1d5db;
+        }
+
+        .event-time {
+            display: block;
+            margin-top: 8px;
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6b7280;
+        }
+
+        .endpoints-section {
+            margin-top: 60px;
+        }
+
+        .endpoint-item {
+            background: rgba(102, 126, 234, 0.05);
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .endpoint-method {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        .endpoint-path {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            color: #e5e7eb;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 80px;
+            padding: 30px 0;
+            color: #4b5563;
+            border-top: 1px solid rgba(102, 126, 234, 0.1);
+        }
+
+        footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        @media (max-width: 768px) {
+            .logo {
+                font-size: 36px;
+            }
+
+            .section-header {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="page">
-    <header class="header">
-      <div>
-        <h1 class="title">Painel de Comandos - Roblox Hub</h1>
-        <p class="subtitle">Monitore os eventos do jogo em tempo real. Todos os servidores compartilham o mesmo histórico de ações.</p>
-      </div>
-      <div class="panel-header">
-        <button class="button-primary" id="refreshButton">Atualizar histórico</button>
-        <span class="status-pill" id="ultimaAtualizacao">Última atualização: nunca</span>
-      </div>
-    </header>
+    <div class="container">
+        <header>
+            <h1 class="logo">Embee Studio</h1>
+            <p class="subtitle">Painel de Controle Roblox - Global Commands & Votações</p>
+            <div class="credits">Desenvolvido por frost230_0</div>
+        </header>
 
-    <section class="grid">
-      <article class="list-card">
-        <h2>Histórico de eventos</h2>
-        <div id="historicoConteudo" class="empty-state">Carregando histórico...</div>
-      </article>
-    </section>
+        <div class="grid">
+            <div class="card">
+                <h2 class="card-title">Global Commands</h2>
+                <p class="card-description">Controle global para todos os jogadores conectados com o script</p>
+                <ul class="feature-list">
+                    <li><span class="feature-icon"></span>Kill Global</li>
+                    <li><span class="feature-icon"></span>Bring Global (Teleportar todos)</li>
+                    <li><span class="feature-icon"></span>Heal Global</li>
+                    <li><span class="feature-icon"></span>Kick Global</li>
+                    <li><span class="feature-icon"></span>Fly Global</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h2 class="card-title">Votações Globais</h2>
+                <p class="card-description">Crie votações que aparecem em tempo real para todos os jogadores</p>
+                <ul class="feature-list">
+                    <li><span class="feature-icon"></span>Pergunta personalizada</li>
+                    <li><span class="feature-icon"></span>2 opções configuráveis</li>
+                    <li><span class="feature-icon"></span>Timer de 20 segundos</li>
+                    <li><span class="feature-icon"></span>Resultados em percentual</li>
+                    <li><span class="feature-icon"></span>Interface intuitiva</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h2 class="card-title">Global Chat</h2>
+                <p class="card-description">Envie mensagens que aparecem como notificação para todos</p>
+                <ul class="feature-list">
+                    <li><span class="feature-icon"></span>Mensagens instantâneas</li>
+                    <li><span class="feature-icon"></span>Notificações em tela</li>
+                    <li><span class="feature-icon"></span>Histórico completo</li>
+                    <li><span class="feature-icon"></span>Multi-servidor</li>
+                </ul>
+            </div>
+        </div>
 
-    <section class="card" style="margin-top: 24px;">
-      <div class="panel-header">
-        <h2 class="panel-title">Endpoints disponíveis</h2>
-      </div>
-      <div class="info-list">
-        <code>POST /api/inicializar</code> - registrar a inicialização do script.
-        <code>POST /api/analisar</code> - enviar um comando de texto para análise.
-        <code>GET /api/comandos</code> - obter o histórico completo de eventos.
-        <code>GET /api/comandos/historico</code> - consultar o histórico detalhado.
-      </div>
-    </section>
-  </div>
+        <div class="events-section">
+            <div class="section-header">
+                <h2 class="section-title">Histórico de Eventos</h2>
+                <button class="refresh-btn" id="refreshButton">Atualizar Histórico</button>
+            </div>
+            <div id="historicoConteudo" class="empty-state">Carregando histórico...</div>
+        </div>
 
-  <script>
-    const historicoConteudo = document.getElementById('historicoConteudo');
-    const ultimaAtualizacao = document.getElementById('ultimaAtualizacao');
-    const refreshButton = document.getElementById('refreshButton');
+        <div class="endpoints-section">
+            <h2 class="section-title" style="margin-bottom: 30px;">Endpoints da API</h2>
+            <div class="endpoint-item">
+                <span class="endpoint-method">POST</span>
+                <span class="endpoint-path">/api/analisar - Enviar comandos ou mensagens</span>
+            </div>
+            <div class="endpoint-item">
+                <span class="endpoint-method">POST</span>
+                <span class="endpoint-path">/api/vote/create - Criar votação</span>
+            </div>
+            <div class="endpoint-item">
+                <span class="endpoint-method">POST</span>
+                <span class="endpoint-path">/api/vote/submit - Enviar voto</span>
+            </div>
+            <div class="endpoint-item">
+                <span class="endpoint-method">GET</span>
+                <span class="endpoint-path">/api/comandos - Obter histórico de eventos</span>
+            </div>
+        </div>
 
-    function formatarMensagem(evento) {
-      if (!evento) return '';
+        <footer>
+            <p>&copy; 2026 Embee Studio. Todos os direitos reservados.</p>
+        </footer>
+    </div>
 
-      if (evento.tipo === 'inicializacao') {
-        return `
-          <div class="event-message init">
-            <span class="event-player">${evento.player}</span>
-            <span class="event-action"> iniciou o script MANUS HUB</span>
-            <span class="event-time">${new Date(evento.data).toLocaleTimeString('pt-BR')}</span>
-          </div>
-        `;
-      }
+    <script>
+        const historicoConteudo = document.getElementById('historicoConteudo');
+        const refreshButton = document.getElementById('refreshButton');
 
-      if (evento.tipo === 'chat' || evento.conteudo) {
-        const conteudo = evento.conteudo || evento.textoOriginal || '';
-        return `
-          <div class="event-message command">
-            <span class="event-player">${evento.player}</span>
-            <span class="event-action">: ${escapeHtml(conteudo)}</span>
-            <span class="event-time">${new Date(evento.timestamp || evento.data).toLocaleTimeString('pt-BR')}</span>
-          </div>
-        `;
-      }
-
-      if (evento.tipo === 'comando_global') {
-        const acao = evento.acao || 'comando_global';
-        const params = evento.parametros ? JSON.stringify(evento.parametros) : '';
-        return `
-          <div class="event-message init">
-            <span class="event-player">[GLOBAL] ${evento.player || 'Sistema'}</span>
-            <span class="event-action"> executou comando global <strong>${escapeHtml(acao)}</strong> ${escapeHtml(params)}</span>
-            <span class="event-time">${new Date(evento.timestamp || evento.data).toLocaleTimeString('pt-BR')}</span>
-          </div>
-        `;
-      }
-
-      return '';
-    }
-
-    function escapeHtml(str) {
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-    }
-
-    async function carregarHistorico() {
-      try {
-        const response = await fetch('/api/comandos');
-        const data = await response.json();
-
-        if (!data.sucesso) {
-          historicoConteudo.textContent = 'Falha ao carregar histórico.';
-          return;
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
         }
 
-        const lista = data.comandos || [];
-        if (lista.length === 0) {
-          historicoConteudo.innerHTML = '<p class="empty-state">Nenhum evento registrado ainda.</p>';
-        } else {
-          historicoConteudo.innerHTML = lista
-            .map(evento => formatarMensagem(evento))
-            .join('');
+        function formatarMensagem(evento) {
+            if (!evento) return '';
+
+            if (evento.tipo === 'vote_start') {
+                return `
+                    <div class="event-message init">
+                        <span class="event-player">[VOTAÇÃO INICIADA] ${evento.player || 'Sistema'}</span>
+                        <span class="event-action"> - ${escapeHtml(evento.vote.question)}</span>
+                        <span class="event-time">${new Date(evento.timestamp || evento.data).toLocaleTimeString('pt-BR')}</span>
+                    </div>
+                `;
+            }
+
+            if (evento.tipo === 'vote_end') {
+                return `
+                    <div class="event-message init">
+                        <span class="event-player">[RESULTADOS]</span>
+                        <span class="event-action"> ${escapeHtml(evento.vote.option1)}: ${evento.results.option1}% | ${escapeHtml(evento.vote.option2)}: ${evento.results.option2}% (Total: ${evento.results.total} votos)</span>
+                        <span class="event-time">${new Date(evento.timestamp || evento.data).toLocaleTimeString('pt-BR')}</span>
+                    </div>
+                `;
+            }
+
+            if (evento.tipo === 'comando_global') {
+                const acao = evento.acao || 'comando_global';
+                return `
+                    <div class="event-message command">
+                        <span class="event-player">[COMANDO GLOBAL] ${evento.player || 'Sistema'}</span>
+                        <span class="event-action"> executou ${escapeHtml(acao)}</span>
+                        <span class="event-time">${new Date(evento.timestamp || evento.data).toLocaleTimeString('pt-BR')}</span>
+                    </div>
+                `;
+            }
+
+            if (evento.tipo === 'chat' || evento.conteudo) {
+                const conteudo = evento.conteudo || evento.textoOriginal || '';
+                return `
+                    <div class="event-message">
+                        <span class="event-player">${evento.player || 'Sistema'}</span>
+                        <span class="event-action">: ${escapeHtml(conteudo)}</span>
+                        <span class="event-time">${new Date(evento.timestamp || evento.data).toLocaleTimeString('pt-BR')}</span>
+                    </div>
+                `;
+            }
+
+            return '';
         }
 
-        ultimaAtualizacao.textContent = 'Última atualização: ' + new Date().toLocaleTimeString('pt-BR');
-      } catch (error) {
-        historicoConteudo.textContent = 'Erro ao carregar histórico.';
-        console.error(error);
-      }
-    }
+        async function carregarHistorico() {
+            try {
+                const response = await fetch('/api/comandos');
+                const data = await response.json();
 
-    refreshButton.addEventListener('click', carregarHistorico);
-    carregarHistorico();
-    setInterval(carregarHistorico, 3000);
-  </script>
+                if (!data.sucesso) {
+                    historicoConteudo.innerHTML = '<p class="empty-state">Falha ao carregar histórico.</p>';
+                    return;
+                }
+
+                const lista = data.comandos || [];
+                if (lista.length === 0) {
+                    historicoConteudo.innerHTML = '<p class="empty-state">Nenhum evento registrado ainda.</p>';
+                } else {
+                    historicoConteudo.innerHTML = lista.map(evento => formatarMensagem(evento)).join('');
+                }
+            } catch (error) {
+                historicoConteudo.innerHTML = '<p class="empty-state">Erro ao carregar histórico.</p>';
+                console.error(error);
+            }
+        }
+
+        refreshButton.addEventListener('click', carregarHistorico);
+        carregarHistorico();
+        setInterval(carregarHistorico, 3000);
+    </script>
 </body>
 </html>
