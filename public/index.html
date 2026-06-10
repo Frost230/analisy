@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Embee Studio - Painel de Controle</title>
+    <title>Embee Studio - Painel Global</title>
     <style>
         * {
             margin: 0;
@@ -13,414 +14,312 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 50%, #16213e 100%);
-            min-height: 100vh;
+            background: #000000;
             color: #ffffff;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 40px 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
         header {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+            padding: 2rem;
             text-align: center;
-            margin-bottom: 60px;
-            padding: 40px 0;
+            border-bottom: 2px solid #333333;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
         }
 
-        .logo {
-            font-size: 48px;
-            font-weight: 800;
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
             background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            margin-bottom: 10px;
+            letter-spacing: 1px;
         }
 
-        .subtitle {
-            font-size: 18px;
-            color: #9ca3af;
-            margin-bottom: 20px;
-        }
-
-        .credits {
-            font-size: 14px;
-            color: #6b7280;
-            background: rgba(102, 126, 234, 0.1);
-            display: inline-block;
-            padding: 10px 24px;
-            border-radius: 20px;
-            border: 1px solid rgba(102, 126, 234, 0.3);
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 30px;
-            margin-bottom: 50px;
-        }
-
-        .card {
-            background: rgba(30, 30, 50, 0.8);
-            border: 1px solid rgba(102, 126, 234, 0.2);
-            border-radius: 20px;
-            padding: 30px;
-            backdrop-filter: blur(10px);
-            transition: all 0.3s ease;
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-            border-color: rgba(102, 126, 234, 0.5);
-            box-shadow: 0 20px 40px rgba(102, 126, 234, 0.2);
-        }
-
-        .card-title {
-            font-size: 24px;
-            font-weight: 700;
-            margin-bottom: 20px;
-            color: #667eea;
-        }
-
-        .card-description {
-            color: #9ca3af;
-            margin-bottom: 20px;
-            line-height: 1.6;
-        }
-
-        .feature-list {
-            list-style: none;
-        }
-
-        .feature-list li {
-            padding: 10px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        .github-link {
             display: flex;
             align-items: center;
-            gap: 10px;
-        }
-
-        .feature-list li:last-child {
-            border-bottom: none;
-        }
-
-        .feature-icon {
-            width: 8px;
-            height: 8px;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-            border-radius: 50%;
-        }
-
-        .events-section {
-            margin-top: 40px;
-        }
-
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-        }
-
-        .section-title {
-            font-size: 28px;
-            font-weight: 700;
-        }
-
-        .refresh-btn {
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 12px 28px;
-            border-radius: 12px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .refresh-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
-        }
-
-        .refresh-btn:active {
-            transform: scale(0.95);
-        }
-
-        #historicoConteudo {
-            background: rgba(20, 20, 35, 0.9);
-            border: 1px solid rgba(102, 126, 234, 0.2);
-            border-radius: 16px;
-            padding: 30px;
-            min-height: 400px;
-        }
-
-        .event-message {
-            background: rgba(102, 126, 234, 0.1);
-            border-left: 4px solid #667eea;
-            padding: 16px 20px;
+            gap: 0.5rem;
+            color: #ffffff;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
             border-radius: 8px;
-            margin-bottom: 12px;
-            transition: all 0.2s ease;
+            background: #333333;
+            transition: all 0.3s ease;
         }
 
-        .event-message:hover {
-            background: rgba(102, 126, 234, 0.2);
+        .github-link:hover {
+            background: #444444;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
         }
 
-        .event-message.init {
-            border-left-color: #764ba2;
+        .github-icon {
+            width: 24px;
+            height: 24px;
         }
 
-        .event-message.command {
-            border-left-color: #f472b6;
+        .dev-credit {
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+            color: #888888;
         }
 
-        .event-player {
-            font-weight: 700;
+        main {
+            flex: 1;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .container {
+            background: #0a0a0a;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid #222222;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+        }
+
+        .container h2 {
+            margin-bottom: 1rem;
+            color: #667eea;
+            font-size: 1.5rem;
+            border-bottom: 2px solid #333333;
+            padding-bottom: 0.5rem;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .status-card {
+            background: #111111;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #222222;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .status-card:hover {
+            border-color: #667eea;
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(102,126,234,0.2);
+        }
+
+        .status-card h3 {
+            color: #888888;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .status-card p {
+            font-size: 2rem;
+            font-weight: bold;
             color: #ffffff;
         }
 
-        .event-action {
-            color: #d1d5db;
-        }
-
-        .event-time {
-            display: block;
-            margin-top: 8px;
-            font-size: 12px;
-            color: #6b7280;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: #6b7280;
-        }
-
-        .endpoints-section {
-            margin-top: 60px;
-        }
-
-        .endpoint-item {
-            background: rgba(102, 126, 234, 0.05);
-            border: 1px solid rgba(102, 126, 234, 0.2);
-            border-radius: 12px;
-            padding: 16px 20px;
-            margin-bottom: 12px;
+        .command-item {
+            background: #111111;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: 6px;
+            border-left: 4px solid #667eea;
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 16px;
+            transition: all 0.2s ease;
         }
 
-        .endpoint-method {
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 6px 16px;
-            border-radius: 8px;
-            font-weight: 700;
-            font-size: 12px;
-            text-transform: uppercase;
+        .command-item:hover {
+            background: #1a1a1a;
+            transform: translateX(4px);
         }
 
-        .endpoint-path {
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 14px;
-            color: #e5e7eb;
+        .command-type {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .type-chat {
+            background: #1e3a5f;
+            color: #60a5fa;
+        }
+
+        .type-command {
+            background: #2d1f1f;
+            color: #f97316;
+        }
+
+        .type-vote {
+            background: #1f2d1f;
+            color: #4ade80;
+        }
+
+        .command-meta {
+            font-size: 0.8rem;
+            color: #888888;
+            margin-top: 0.25rem;
         }
 
         footer {
             text-align: center;
-            margin-top: 80px;
-            padding: 30px 0;
-            color: #4b5563;
-            border-top: 1px solid rgba(102, 126, 234, 0.1);
-        }
-
-        footer a {
-            color: #667eea;
-            text-decoration: none;
-        }
-
-        @media (max-width: 768px) {
-            .logo {
-                font-size: 36px;
-            }
-
-            .section-header {
-                flex-direction: column;
-                gap: 20px;
-                text-align: center;
-            }
+            padding: 1.5rem;
+            background: #0a0a0a;
+            border-top: 1px solid #222222;
+            color: #555555;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1 class="logo">Embee Studio</h1>
-            <p class="subtitle">Painel de Controle Roblox - Global Commands & Votações</p>
-            <div class="credits">Desenvolvido por frost230_0</div>
-        </header>
+    <header>
+        <div class="header-content">
+            <h1>🎮 Embee Studio</h1>
+            <a href="https://github.com/Frost230/analisy" target="_blank" class="github-link">
+                <svg class="github-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                </svg>
+                GitHub
+            </a>
+        </div>
+        <p class="dev-credit">Desenvolvido por frost230_0</p>
+    </header>
 
-        <div class="grid">
-            <div class="card">
-                <h2 class="card-title">Global Commands</h2>
-                <p class="card-description">Controle global para todos os jogadores conectados com o script</p>
-                <ul class="feature-list">
-                    <li><span class="feature-icon"></span>Kill Global</li>
-                    <li><span class="feature-icon"></span>Bring Global (Teleportar todos)</li>
-                    <li><span class="feature-icon"></span>Heal Global</li>
-                    <li><span class="feature-icon"></span>Kick Global</li>
-                    <li><span class="feature-icon"></span>Fly Global</li>
-                </ul>
-            </div>
-            <div class="card">
-                <h2 class="card-title">Votações Globais</h2>
-                <p class="card-description">Crie votações que aparecem em tempo real para todos os jogadores</p>
-                <ul class="feature-list">
-                    <li><span class="feature-icon"></span>Pergunta personalizada</li>
-                    <li><span class="feature-icon"></span>2 opções configuráveis</li>
-                    <li><span class="feature-icon"></span>Timer de 20 segundos</li>
-                    <li><span class="feature-icon"></span>Resultados em percentual</li>
-                    <li><span class="feature-icon"></span>Interface intuitiva</li>
-                </ul>
-            </div>
-            <div class="card">
-                <h2 class="card-title">Global Chat</h2>
-                <p class="card-description">Envie mensagens que aparecem como notificação para todos</p>
-                <ul class="feature-list">
-                    <li><span class="feature-icon"></span>Mensagens instantâneas</li>
-                    <li><span class="feature-icon"></span>Notificações em tela</li>
-                    <li><span class="feature-icon"></span>Histórico completo</li>
-                    <li><span class="feature-icon"></span>Multi-servidor</li>
-                </ul>
+    <main>
+        <div class="container">
+            <h2>📊 Status do Sistema</h2>
+            <div class="status-grid">
+                <div class="status-card">
+                    <h3>Total de Eventos</h3>
+                    <p id="totalEvents">0</p>
+                </div>
+                <div class="status-card">
+                    <h3>Comandos Executados</h3>
+                    <p id="totalCommands">0</p>
+                </div>
+                <div class="status-card">
+                    <h3>Votações Realizadas</h3>
+                    <p id="totalVotes">0</p>
+                </div>
             </div>
         </div>
 
-        <div class="events-section">
-            <div class="section-header">
-                <h2 class="section-title">Histórico de Eventos</h2>
-                <button class="refresh-btn" id="refreshButton">Atualizar Histórico</button>
-            </div>
-            <div id="historicoConteudo" class="empty-state">Carregando histórico...</div>
-        </div>
-
-        <div class="endpoints-section">
-            <h2 class="section-title" style="margin-bottom: 30px;">Endpoints da API</h2>
-            <div class="endpoint-item">
-                <span class="endpoint-method">POST</span>
-                <span class="endpoint-path">/api/analisar - Enviar comandos ou mensagens</span>
-            </div>
-            <div class="endpoint-item">
-                <span class="endpoint-method">POST</span>
-                <span class="endpoint-path">/api/vote/create - Criar votação</span>
-            </div>
-            <div class="endpoint-item">
-                <span class="endpoint-method">POST</span>
-                <span class="endpoint-path">/api/vote/submit - Enviar voto</span>
-            </div>
-            <div class="endpoint-item">
-                <span class="endpoint-method">GET</span>
-                <span class="endpoint-path">/api/comandos - Obter histórico de eventos</span>
+        <div class="container">
+            <h2>📜 Histórico de Eventos</h2>
+            <div id="historyContainer">
+                <p style="color: #888888; text-align: center; padding: 2rem;">Aguardando eventos...</p>
             </div>
         </div>
+    </main>
 
-        <footer>
-            <p>&copy; 2026 Embee Studio. Todos os direitos reservados.</p>
-        </footer>
-    </div>
+    <footer>
+        <p>&copy; 2026 Embee Studio. Todos os direitos reservados.</p>
+    </footer>
 
     <script>
-        const historicoConteudo = document.getElementById('historicoConteudo');
-        const refreshButton = document.getElementById('refreshButton');
+        let totalEvents = 0;
+        let totalCommands = 0;
+        let totalVotes = 0;
 
-        function escapeHtml(str) {
-            return String(str)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#039;');
-        }
-
-        function formatarMensagem(evento) {
-            if (!evento) return '';
-
-            if (evento.tipo === 'vote_start') {
-                return `
-                    <div class="event-message init">
-                        <span class="event-player">[VOTAÇÃO INICIADA] ${evento.player || 'Sistema'}</span>
-                        <span class="event-action"> - ${escapeHtml(evento.vote.question)}</span>
-                        <span class="event-time">${new Date(evento.timestamp || evento.data).toLocaleTimeString('pt-BR')}</span>
-                    </div>
-                `;
-            }
-
-            if (evento.tipo === 'vote_end') {
-                return `
-                    <div class="event-message init">
-                        <span class="event-player">[RESULTADOS]</span>
-                        <span class="event-action"> ${escapeHtml(evento.vote.option1)}: ${evento.results.option1}% | ${escapeHtml(evento.vote.option2)}: ${evento.results.option2}% (Total: ${evento.results.total} votos)</span>
-                        <span class="event-time">${new Date(evento.timestamp || evento.data).toLocaleTimeString('pt-BR')}</span>
-                    </div>
-                `;
-            }
-
-            if (evento.tipo === 'comando_global') {
-                const acao = evento.acao || 'comando_global';
-                return `
-                    <div class="event-message command">
-                        <span class="event-player">[COMANDO GLOBAL] ${evento.player || 'Sistema'}</span>
-                        <span class="event-action"> executou ${escapeHtml(acao)}</span>
-                        <span class="event-time">${new Date(evento.timestamp || evento.data).toLocaleTimeString('pt-BR')}</span>
-                    </div>
-                `;
-            }
-
-            if (evento.tipo === 'chat' || evento.conteudo) {
-                const conteudo = evento.conteudo || evento.textoOriginal || '';
-                return `
-                    <div class="event-message">
-                        <span class="event-player">${evento.player || 'Sistema'}</span>
-                        <span class="event-action">: ${escapeHtml(conteudo)}</span>
-                        <span class="event-time">${new Date(evento.timestamp || evento.data).toLocaleTimeString('pt-BR')}</span>
-                    </div>
-                `;
-            }
-
-            return '';
-        }
-
-        async function carregarHistorico() {
+        async function fetchCommands() {
             try {
                 const response = await fetch('/api/comandos');
                 const data = await response.json();
-
-                if (!data.sucesso) {
-                    historicoConteudo.innerHTML = '<p class="empty-state">Falha ao carregar histórico.</p>';
-                    return;
-                }
-
-                const lista = data.comandos || [];
-                if (lista.length === 0) {
-                    historicoConteudo.innerHTML = '<p class="empty-state">Nenhum evento registrado ainda.</p>';
-                } else {
-                    historicoConteudo.innerHTML = lista.map(evento => formatarMensagem(evento)).join('');
+                
+                if (data.sucesso) {
+                    updateUI(data.comandos);
                 }
             } catch (error) {
-                historicoConteudo.innerHTML = '<p class="empty-state">Erro ao carregar histórico.</p>';
-                console.error(error);
+                console.error('Erro ao buscar comandos:', error);
             }
         }
 
-        refreshButton.addEventListener('click', carregarHistorico);
-        carregarHistorico();
-        setInterval(carregarHistorico, 3000);
+        function updateUI(commands) {
+            const historyContainer = document.getElementById('historyContainer');
+            
+            if (commands.length === 0) {
+                historyContainer.innerHTML = '<p style="color: #888888; text-align: center; padding: 2rem;">Aguardando eventos...</p>';
+                return;
+            }
+
+            // Atualiza contadores
+            totalEvents = commands.length;
+            totalCommands = commands.filter(c => c.tipo === 'comando_global').length;
+            totalVotes = commands.filter(c => c.tipo === 'vote_start').length;
+            
+            document.getElementById('totalEvents').textContent = totalEvents;
+            document.getElementById('totalCommands').textContent = totalCommands;
+            document.getElementById('totalVotes').textContent = totalVotes;
+
+            // Renderiza histórico
+            historyContainer.innerHTML = commands.slice(0, 50).map(event => {
+                let typeClass = 'type-chat';
+                let typeText = 'Chat';
+                let content = '';
+
+                if (event.tipo === 'comando_global') {
+                    typeClass = 'type-command';
+                    typeText = 'Comando';
+                    content = event.acao || event.conteudo;
+                } else if (event.tipo === 'vote_start') {
+                    typeClass = 'type-vote';
+                    typeText = 'Votação';
+                    content = event.vote ? event.vote.question : 'Nova votação iniciada';
+                } else if (event.tipo === 'vote_end') {
+                    typeClass = 'type-vote';
+                    typeText = 'Resultado';
+                    content = event.results 
+                        ? `${event.vote.option1}: ${event.results.option1}% | ${event.vote.option2}: ${event.results.option2}% (Total: ${event.results.total} votos)`
+                        : 'Votação encerrada';
+                } else {
+                    content = event.conteudo;
+                }
+
+                const date = new Date(event.timestamp);
+                const time = date.toLocaleTimeString('pt-BR');
+                
+                return `
+                    <div class="command-item">
+                        <div>
+                            <span class="command-type ${typeClass}">${typeText}</span>
+                            <div style="margin-top: 0.5rem;">
+                                <strong>${event.player || 'Sistema'}:</strong> ${escapeHtml(content)}
+                            </div>
+                            <div class="command-meta">${time}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Atualiza a cada 1.5 segundos
+        fetchCommands();
+        setInterval(fetchCommands, 1500);
     </script>
 </body>
 </html>

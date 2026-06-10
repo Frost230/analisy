@@ -4,7 +4,7 @@ local Window = Fluent:CreateWindow({
     Title = "Embee Studio",
     SubTitle = "Painel Global",
     TabWidth = 160,
-    Size = UDim2.fromOffset(580, 460),
+    Size = UDim2.fromOffset(600, 500),
     Acrylic = true,
     Theme = "Dark",
     MinimizeKey = Enum.KeyCode.LeftControl
@@ -12,7 +12,9 @@ local Window = Fluent:CreateWindow({
 
 local Tabs = {
     GlobalChat = Window:AddTab({ Title = "Global Chat", Icon = "message-square" }),
-    GlobalCommands = Window:AddTab({ Title = "Global Commands", Icon = "command" }),
+    PlayerCommands = Window:AddTab({ Title = "Player", Icon = "user" }),
+    WorldCommands = Window:AddTab({ Title = "World", Icon = "globe" }),
+    FunCommands = Window:AddTab({ Title = "Fun", Icon = "smile" }),
     VoteGlobal = Window:AddTab({ Title = "Vote Global", Icon = "check" })
 }
 
@@ -21,6 +23,7 @@ local HttpService = game:GetService("HttpService")
 local TeleportService = game:GetService("TeleportService")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local BASE_URL = "https://analisy-omega.vercel.app"
 local SEU_SITE_URL = BASE_URL .. "/api/analisar"
@@ -217,7 +220,60 @@ local function toggleFly(enable)
     end
 end
 
-local function criarJanelaVotacao(voteData)
+local function noclipPlayer(enable)
+    local character = getCharacter()
+    if not character then return end
+    for _, v in pairs(character:GetDescendants()) do
+        if v:IsA("BasePart") and v.CanCollide then
+            v.CanCollide = not enable
+        end
+    end
+end
+
+local function superJump(character)
+    if character and character:FindFirstChild("Humanoid") then
+        character.Humanoid.JumpPower = 200
+    end
+end
+
+local function godMode(character)
+    if character and character:FindFirstChild("Humanoid") then
+        character.Humanoid.MaxHealth = math.huge
+        character.Humanoid.Health = math.huge
+    end
+end
+
+local function spawnParticles(character)
+    if not character then return end
+    local hrp = character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+    local particle = Instance.new("ParticleEmitter")
+    particle.Texture = "rbxassetid://154966922"
+    particle.Rate = 50
+    particle.Lifetime = NumberRange.new(0.5, 1)
+    particle.Speed = NumberRange.new(5, 10)
+    particle.SpreadAngle = Vector2.new(360, 360)
+    particle.Parent = hrp
+    task.delay(5, function()
+        particle:Destroy()
+    end)
+end
+
+local function rainbowCharacter(character)
+    if not character then return end
+    task.spawn(function()
+        for i = 0, 1, 0.01 do
+            for _, part in pairs(character:GetChildren()) do
+                if part:IsA("BasePart") then
+                    part.Color = Color3.fromHSV(i, 1, 1)
+                end
+            end
+            task.wait(0.01)
+        end
+    end)
+end
+
+local function createJanelaVotacao(voteData)
     if activeVoteWindow then
         activeVoteWindow:Destroy()
     end
@@ -402,41 +458,94 @@ Tabs.GlobalChat:AddButton({
     end
 })
 
-Tabs.GlobalCommands:AddButton({
+-- Player Commands Tab
+Tabs.PlayerCommands:AddButton({
     Title = "Kill Global",
     Callback = function()
         enviarComando("kill global")
     end
 })
 
-Tabs.GlobalCommands:AddButton({
+Tabs.PlayerCommands:AddButton({
     Title = "Bring Global",
     Callback = function()
         enviarComando("bring global")
     end
 })
 
-Tabs.GlobalCommands:AddButton({
+Tabs.PlayerCommands:AddButton({
     Title = "Heal Global",
     Callback = function()
         enviarComando("heal global")
     end
 })
 
-Tabs.GlobalCommands:AddButton({
+Tabs.PlayerCommands:AddButton({
     Title = "Kick Global",
     Callback = function()
         enviarComando("kick global")
     end
 })
 
-Tabs.GlobalCommands:AddButton({
+Tabs.PlayerCommands:AddButton({
     Title = "Fly Global",
     Callback = function()
         enviarComando("fly global")
     end
 })
 
+Tabs.PlayerCommands:AddButton({
+    Title = "Noclip Global",
+    Callback = function()
+        enviarComando("noclip global")
+    end
+})
+
+Tabs.PlayerCommands:AddButton({
+    Title = "Super Jump Global",
+    Callback = function()
+        enviarComando("superjump global")
+    end
+})
+
+Tabs.PlayerCommands:AddButton({
+    Title = "God Mode Global",
+    Callback = function()
+        enviarComando("godmode global")
+    end
+})
+
+-- World Commands Tab
+Tabs.WorldCommands:AddButton({
+    Title = "Clear Chat Global",
+    Callback = function()
+        enviarComando("clearchat global")
+    end
+})
+
+Tabs.WorldCommands:AddButton({
+    Title = "Reset Workspace Global",
+    Callback = function()
+        enviarComando("resetworkspace global")
+    end
+})
+
+-- Fun Commands Tab
+Tabs.FunCommands:AddButton({
+    Title = "Particles Global",
+    Callback = function()
+        enviarComando("particles global")
+    end
+})
+
+Tabs.FunCommands:AddButton({
+    Title = "Rainbow Global",
+    Callback = function()
+        enviarComando("rainbow global")
+    end
+})
+
+-- Vote Tab
 Tabs.VoteGlobal:AddInput("VoteQuestion", {
     Title = "Pergunta da Votação",
     Placeholder = "Digite a pergunta...",
@@ -524,11 +633,26 @@ task.spawn(function()
                                     elseif acao == "fly_global" then
                                         Fluent:Notify({ Title = "Comando Global", Content = "Fly Global!", Duration = 3 })
                                         toggleFly(true)
+                                    elseif acao == "noclip_global" then
+                                        Fluent:Notify({ Title = "Comando Global", Content = "Noclip Global!", Duration = 3 })
+                                        noclipPlayer(true)
+                                    elseif acao == "superjump_global" then
+                                        Fluent:Notify({ Title = "Comando Global", Content = "Super Jump Global!", Duration = 3 })
+                                        superJump(getCharacter())
+                                    elseif acao == "godmode_global" then
+                                        Fluent:Notify({ Title = "Comando Global", Content = "God Mode Global!", Duration = 3 })
+                                        godMode(getCharacter())
+                                    elseif acao == "particles_global" then
+                                        Fluent:Notify({ Title = "Comando Global", Content = "Particles Global!", Duration = 3 })
+                                        spawnParticles(getCharacter())
+                                    elseif acao == "rainbow_global" then
+                                        Fluent:Notify({ Title = "Comando Global", Content = "Rainbow Global!", Duration = 3 })
+                                        rainbowCharacter(getCharacter())
                                     end
                                 end
                             elseif dados.tipo == "vote_start" then
                                 if not primeiraExecucao then
-                                    criarJanelaVotacao(dados.vote)
+                                    createJanelaVotacao(dados.vote)
                                 end
                             elseif dados.tipo == "vote_end" then
                                 if not primeiraExecucao then
