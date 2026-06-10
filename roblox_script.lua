@@ -1,5 +1,5 @@
 
-local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
+local KavoUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
 
 local LocalPlayer = game:GetService("Players").LocalPlayer
 local HttpService = game:GetService("HttpService")
@@ -23,16 +23,15 @@ local VoteOption1 = ""
 local VoteOption2 = ""
 local GlobalMsg = ""
 
-local Window = OrionLib:MakeWindow({
-    Name = "Embee Studio | Painel Global",
-    HidePremium = false,
-    SaveConfig = true,
-    ConfigFolder = "EmbeeStudio"
-})
+local Window = KavoUI.CreateLib("Embee Studio | Painel Global", "DarkTheme")
 
-local ChatTab = Window:MakeTab({Name = "Global Chat", Icon = "rbxassetid://4483345998", PremiumOnly = false})
-local CommandsTab = Window:MakeTab({Name = "Global Commands", Icon = "rbxassetid://4483345998", PremiumOnly = false})
-local VoteTab = Window:MakeTab({Name = "Votação Global", Icon = "rbxassetid://4483345998", PremiumOnly = false})
+local ChatTab = Window:NewTab("Global Chat")
+local CommandsTab = Window:NewTab("Global Commands")
+local VoteTab = Window:NewTab("Votação Global")
+
+local ChatSection = ChatTab:NewSection("Chat Global")
+local CommandsSection = CommandsTab:NewSection("Comandos")
+local VoteSection = VoteTab:NewSection("Votação")
 
 local function getHttpRequest()
     local success, requestFunc = pcall(function()
@@ -57,7 +56,7 @@ local function enviarComando(conteudo)
     task.spawn(function()
         local httpRequest = getHttpRequest()
         if not httpRequest then
-            OrionLib:MakeNotification({Name = "Erro", Content = "Executor não suporta requisições HTTP", Image = "rbxassetid://4483345998", Time = 3})
+            Window:NewNotification("Erro", "Executor não suporta requisições HTTP", 3)
             task.wait(0.5)
             isSendingCommand = false
             return
@@ -72,9 +71,9 @@ local function enviarComando(conteudo)
             })
         end)
         if not success or not response or not (response.StatusCode == 200 or response.status == 200) then
-            OrionLib:MakeNotification({Name = "Erro", Content = "Falha ao enviar comando", Image = "rbxassetid://4483345998", Time = 3})
+            Window:NewNotification("Erro", "Falha ao enviar comando", 3)
         else
-            OrionLib:MakeNotification({Name = "Comando Enviado", Content = conteudo, Image = "rbxassetid://4483345998", Time = 2})
+            Window:NewNotification("Comando Enviado", conteudo, 2)
         end
         task.wait(0.5)
         isSendingCommand = false
@@ -89,7 +88,7 @@ local function criarVotacao(question, option1, option2)
     task.spawn(function()
         local httpRequest = getHttpRequest()
         if not httpRequest then
-            OrionLib:MakeNotification({Name = "Erro", Content = "Executor não suporta requisições HTTP", Image = "rbxassetid://4483345998", Time = 3})
+            Window:NewNotification("Erro", "Executor não suporta requisições HTTP", 3)
             task.wait(0.5)
             isSendingCommand = false
             return
@@ -104,9 +103,9 @@ local function criarVotacao(question, option1, option2)
             })
         end)
         if not success or not response or not (response.StatusCode == 200 or response.status == 200) then
-            OrionLib:MakeNotification({Name = "Erro", Content = "Falha ao criar votação", Image = "rbxassetid://4483345998", Time = 3})
+            Window:NewNotification("Erro", "Falha ao criar votação", 3)
         else
-            OrionLib:MakeNotification({Name = "Votação Criada", Content = "Votação iniciada com sucesso!", Image = "rbxassetid://4483345998", Time = 2})
+            Window:NewNotification("Votação Criada", "Votação iniciada com sucesso!", 2)
         end
         task.wait(0.5)
         isSendingCommand = false
@@ -121,7 +120,7 @@ local function enviarVoto(voteId, choice)
     task.spawn(function()
         local httpRequest = getHttpRequest()
         if not httpRequest then
-            OrionLib:MakeNotification({Name = "Erro", Content = "Executor não suporta requisições HTTP", Image = "rbxassetid://4483345998", Time = 3})
+            Window:NewNotification("Erro", "Executor não suporta requisições HTTP", 3)
             task.wait(0.5)
             isSendingCommand = false
             return
@@ -136,9 +135,9 @@ local function enviarVoto(voteId, choice)
             })
         end)
         if not success or not response or not (response.StatusCode == 200 or response.status == 200) then
-            OrionLib:MakeNotification({Name = "Erro", Content = "Falha ao enviar voto", Image = "rbxassetid://4483345998", Time = 3})
+            Window:NewNotification("Erro", "Falha ao enviar voto", 3)
         else
-            OrionLib:MakeNotification({Name = "Voto Enviado", Content = "Voto registrado com sucesso!", Image = "rbxassetid://4483345998", Time = 2})
+            Window:NewNotification("Voto Enviado", "Voto registrado com sucesso!", 2)
         end
         task.wait(0.5)
         isSendingCommand = false
@@ -364,113 +363,62 @@ local function criarJanelaVotacao(voteData)
 end
 
 local function mostrarResultadosVotacao(results)
-    OrionLib:MakeNotification({
-        Name = "Resultados da Votação",
-        Content = string.format("%s: %d%% | %s: %d%% (Total: %d votos)",
-            results.vote.option1, results.results.option1,
-            results.vote.option2, results.results.option2,
-            results.results.total),
-        Image = "rbxassetid://4483345998",
-        Time = 10
-    })
+    Window:NewNotification("Resultados da Votação", string.format("%s: %d%% | %s: %d%% (Total: %d votos)",
+        results.vote.option1, results.results.option1,
+        results.vote.option2, results.results.option2,
+        results.results.total), 10)
 end
 
--- Now build the Orion UI
-ChatTab:AddTextbox({
-    Name = "Mensagem / Comando",
-    Default = "",
-    TextDisappear = true,
-    Callback = function(Value)
-        GlobalMsg = Value
-    end
-})
+-- Now build the Kavo UI
+ChatSection:NewTextBox("Mensagem / Comando", "Digite aqui", function(Value)
+    GlobalMsg = Value
+end)
 
-ChatTab:AddButton({
-    Name = "Enviar Mensagem",
-    Callback = function()
-        if GlobalMsg ~= "" then
-            enviarComando(GlobalMsg)
-        end
+ChatSection:NewButton("Enviar Mensagem", "", function()
+    if GlobalMsg ~= "" then
+        enviarComando(GlobalMsg)
     end
-})
+end)
 
-CommandsTab:AddButton({
-    Name = "Kill Global",
-    Callback = function()
-        enviarComando("kill global")
-    end
-})
+CommandsSection:NewButton("Kill Global", "", function()
+    enviarComando("kill global")
+end)
 
-CommandsTab:AddButton({
-    Name = "Bring Global",
-    Callback = function()
-        enviarComando("bring global")
-    end
-})
+CommandsSection:NewButton("Bring Global", "", function()
+    enviarComando("bring global")
+end)
 
-CommandsTab:AddButton({
-    Name = "Heal Global",
-    Callback = function()
-        enviarComando("heal global")
-    end
-})
+CommandsSection:NewButton("Heal Global", "", function()
+    enviarComando("heal global")
+end)
 
-CommandsTab:AddButton({
-    Name = "Kick Global",
-    Callback = function()
-        enviarComando("kick global")
-    end
-})
+CommandsSection:NewButton("Kick Global", "", function()
+    enviarComando("kick global")
+end)
 
-CommandsTab:AddButton({
-    Name = "Fly Global",
-    Callback = function()
-        enviarComando("fly global")
-    end
-})
+CommandsSection:NewButton("Fly Global", "", function()
+    enviarComando("fly global")
+end)
 
-VoteTab:AddTextbox({
-    Name = "Pergunta da Votação",
-    Default = "",
-    TextDisappear = true,
-    Callback = function(Value)
-        VoteQuestion = Value
-    end
-})
+VoteSection:NewTextBox("Pergunta da Votação", "", function(Value)
+    VoteQuestion = Value
+end)
 
-VoteTab:AddTextbox({
-    Name = "Opção 1",
-    Default = "Sim",
-    TextDisappear = true,
-    Callback = function(Value)
-        VoteOption1 = Value
-    end
-})
+VoteSection:NewTextBox("Opção 1", "Sim", function(Value)
+    VoteOption1 = Value
+end)
 
-VoteTab:AddTextbox({
-    Name = "Opção 2",
-    Default = "Não",
-    TextDisappear = true,
-    Callback = function(Value)
-        VoteOption2 = Value
-    end
-})
+VoteSection:NewTextBox("Opção 2", "Não", function(Value)
+    VoteOption2 = Value
+end)
 
-VoteTab:AddButton({
-    Name = "Iniciar Votação",
-    Callback = function()
-        if VoteQuestion ~= "" then
-            criarVotacao(VoteQuestion, VoteOption1 ~= "" and VoteOption1 or "Sim", VoteOption2 ~= "" and VoteOption2 or "Não")
-        else
-            OrionLib:MakeNotification({
-                Name = "Erro",
-                Content = "Digite uma pergunta para iniciar votação!",
-                Image = "rbxassetid://4483345998",
-                Time = 3
-            })
-        end
+VoteSection:NewButton("Iniciar Votação", "", function()
+    if VoteQuestion ~= "" then
+        criarVotacao(VoteQuestion, VoteOption1 ~= "" and VoteOption1 or "Sim", VoteOption2 ~= "" and VoteOption2 or "Não")
+    else
+        Window:NewNotification("Erro", "Digite uma pergunta para iniciar votação!", 3)
     end
-})
+end)
 
 -- Now the listener loop
 task.spawn(function()
@@ -506,46 +454,21 @@ task.spawn(function()
                                 local parametros = dados.parametros or {}
                                 if not primeiraExecucao then
                                     if acao == "kill_global" then
-                                        OrionLib:MakeNotification({
-                                            Name = "Comando Global",
-                                            Content = "Kill Global ativado!",
-                                            Image = "rbxassetid://4483345998",
-                                            Time = 3
-                                        })
+                                        Window:NewNotification("Comando Global", "Kill Global ativado!", 3)
                                         killPlayer(getCharacter())
                                     elseif acao == "bring_global" then
-                                        OrionLib:MakeNotification({
-                                            Name = "Comando Global",
-                                            Content = "Bring Global - teleportando...",
-                                            Image = "rbxassetid://4483345998",
-                                            Time = 5
-                                        })
+                                        Window:NewNotification("Comando Global", "Bring Global - teleportando...", 5)
                                         if parametros.placeId and parametros.jobId then
                                             TeleportService:TeleportToPlaceInstance(parametros.placeId, parametros.jobId, LocalPlayer)
                                         end
                                     elseif acao == "heal_global" then
-                                        OrionLib:MakeNotification({
-                                            Name = "Comando Global",
-                                            Content = "Heal Global ativado!",
-                                            Image = "rbxassetid://4483345998",
-                                            Time = 3
-                                        })
+                                        Window:NewNotification("Comando Global", "Heal Global ativado!", 3)
                                         healPlayer(getCharacter())
                                     elseif acao == "kick_global" then
-                                        OrionLib:MakeNotification({
-                                            Name = "Comando Global",
-                                            Content = "Kick Global ativado!",
-                                            Image = "rbxassetid://4483345998",
-                                            Time = 3
-                                        })
+                                        Window:NewNotification("Comando Global", "Kick Global ativado!", 3)
                                         kickPlayer()
                                     elseif acao == "fly_global" then
-                                        OrionLib:MakeNotification({
-                                            Name = "Comando Global",
-                                            Content = "Fly Global ativado!",
-                                            Image = "rbxassetid://4483345998",
-                                            Time = 3
-                                        })
+                                        Window:NewNotification("Comando Global", "Fly Global ativado!", 3)
                                         toggleFly(true)
                                     end
                                 end
@@ -560,12 +483,7 @@ task.spawn(function()
                             elseif dados.tipo == "chat" then
                                 local texto = dados.conteudo or ""
                                 if texto ~= "" and not primeiraExecucao then
-                                    OrionLib:MakeNotification({
-                                        Name = "Anúncio Global de " .. (dados.player or "Sistema"),
-                                        Content = texto,
-                                        Image = "rbxassetid://4483345998",
-                                        Time = 6
-                                    })
+                                    Window:NewNotification("Anúncio Global de " .. (dados.player or "Sistema"), texto, 6)
                                 end
                             end
                         end
@@ -579,5 +497,3 @@ task.spawn(function()
         task.wait(1.5)
     end
 end)
-
-OrionLib:Init()
