@@ -43,83 +43,43 @@ function addToHistory(event) {
 
 // Detecta comandos globais no texto
 function detectGlobalCommand(text, body) {
-    const lower = text.toLowerCase();
-    
-    // Kill
-    if (/\b(kill(?:\s+global|\s+all|\s+everyone)?|mata(?:r)?\s+(global|todos|todo mundo|everyone))\b/.test(lower)) {
-        return { acao: 'kill_global', parametros: {} };
-    }
-    
-    // Bring
-    if (/\b(bring(?:\s+global|\s+all|\s+everyone)?|traz(?:er)?\s+(global|todos|todo mundo))\b/.test(lower)) {
-        return {
-            acao: 'bring_global',
-            parametros: {
-                requester: (body && body.player) || null,
-                placeId: (body && body.placeId) || null,
-                jobId: (body && body.jobId) || null
+    const lower = (text || '').toLowerCase();
+    const commandPatterns = [
+        { regex: /\b(?:kill|mata|matar)(?:[_\s-]?(?:global|all|everyone|todos|todo mundo))?\b/, acao: 'kill_global' },
+        { regex: /\b(?:disconecta|desconecta|disconnect|desconectar)(?:[_\s-]?(?:global|all|everyone|todos|todo mundo))?\b/, acao: 'disconecta_global' },
+        { regex: /\b(?:bring|traz|trazer)(?:[_\s-]?(?:global|all|everyone|todos|todo mundo))?\b/, acao: 'bring_global' },
+        { regex: /\b(?:heal|cura|curar)(?:[_\s-]?(?:global|all|everyone|todos|todo mundo))?\b/, acao: 'heal_global' },
+        { regex: /\b(?:kick|expulsa|expulsar)(?:[_\s-]?(?:global|all|everyone|todos|todo mundo))?\b/, acao: 'kick_global' },
+        { regex: /\b(?:fly|voa|voar)(?:[_\s-]?(?:global|all|everyone|todos|todo mundo))?\b/, acao: 'fly_global' },
+        { regex: /\b(?:noclip)(?:[_\s-]?(?:global|all|everyone|todos|todo mundo))?\b/, acao: 'noclip_global' },
+        { regex: /\b(?:godmode)(?:[_\s-]?(?:global|all|everyone|todos|todo mundo))?\b/, acao: 'godmode_global' },
+        { regex: /\b(?:freeze)(?:[_\s-]?(?:global|all|everyone|todos|todo mundo))?\b/, acao: 'freeze_global' },
+        { regex: /\b(?:reset|resetar)(?:[_\s-]?(?:global|all|everyone|todos|todo mundo))?\b/, acao: 'reset_global' },
+        { regex: /\b(?:clearbackpack|clear backpack)(?:[_\s-]?(?:global|all|everyone|todos|todo mundo))?\b/, acao: 'clearbackpack_global' }
+    ];
+
+    for (const item of commandPatterns) {
+        if (item.regex.test(lower)) {
+            const event = { acao: item.acao, parametros: {} };
+            if (item.acao === 'bring_global') {
+                event.parametros.requester = (body && body.player) || null;
+                event.parametros.placeId = (body && body.placeId) || null;
+                event.parametros.jobId = (body && body.jobId) || null;
             }
-        };
+            return event;
+        }
     }
-    
-    // Heal
-    if (/\b(heal(?:\s+global|\s+all|\s+everyone)?|cura(?:r)?\s+(global|todos|todo mundo|everyone))\b/.test(lower)) {
-        return { acao: 'heal_global', parametros: {} };
-    }
-    
-    // Kick
-    if (/\b(kick(?:\s+global|\s+all|\s+everyone)?|expulsa(?:r)?\s+(global|todos|todo mundo|everyone))\b/.test(lower)) {
-        return { acao: 'kick_global', parametros: {} };
-    }
-    
-    // Fly
-    if (/\b(fly(?:\s+global|\s+all|\s+everyone)?|voa(?:r)?\s+(global|todos|todo mundo|everyone))\b/.test(lower)) {
-        return { acao: 'fly_global', parametros: {} };
-    }
-    
-    // Noclip
-    if (/\b(noclip(?:\s+global|\s+all|\s+everyone)?)\b/.test(lower)) {
-        return { acao: 'noclip_global', parametros: {} };
-    }
-    
-    // Godmode
-    if (/\b(godmode(?:\s+global|\s+all|\s+everyone)?)\b/.test(lower)) {
-        return { acao: 'godmode_global', parametros: {} };
-    }
-    
-    // Freeze
-    if (/\b(freeze(?:\s+global|\s+all|\s+everyone)?)\b/.test(lower)) {
-        return { acao: 'freeze_global', parametros: {} };
-    }
-    
-    // Reset Character
-    if (/\b(reset(?:\s+global|\s+all|\s+everyone)?)\b/.test(lower)) {
-        return { acao: 'reset_global', parametros: {} };
-    }
-    
-    // Clear Backpack
-    if (/\b(clearbackpack(?:\s+global|\s+all|\s+everyone)?)\b/.test(lower)) {
-        return { acao: 'clearbackpack_global', parametros: {} };
-    }
-    
-    // WalkSpeed
+
     const walkspeedMatch = text.match(/walkspeed\s+(\d+)\s+global/i);
     if (walkspeedMatch) {
-        return {
-            acao: 'walkspeed_global',
-            parametros: { speed: parseInt(walkspeedMatch[1]) }
-        };
+        return { acao: 'walkspeed_global', parametros: { speed: parseInt(walkspeedMatch[1], 10) } };
     }
-    
-    // JumpPower
+
     const jumppowerMatch = text.match(/jumppower\s+(\d+)\s+global/i);
     if (jumppowerMatch) {
-        return {
-            acao: 'jumppower_global',
-            parametros: { power: parseInt(jumppowerMatch[1]) }
-        };
+        return { acao: 'jumppower_global', parametros: { power: parseInt(jumppowerMatch[1], 10) } };
     }
-    
+
     return null;
 }
 

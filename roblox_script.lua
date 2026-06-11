@@ -11,9 +11,8 @@ local Window = Fluent:CreateWindow({
 })
 
 local Tabs = {
-    GlobalChat = Window:AddTab({ Title = "Global Chat", Icon = "message-square" }),
-    PlayerCommands = Window:AddTab({ Title = "Player", Icon = "user" }),
-    ServerCommands = Window:AddTab({ Title = "Server", Icon = "server" }),
+    GlobalMenssagem = Window:AddTab({ Title = "Global Menssagem", Icon = "message-square" }),
+    Conf = Window:AddTab({ Title = "Conf", Icon = "settings" }),
     VoteGlobal = Window:AddTab({ Title = "Vote Global", Icon = "check" })
 }
 
@@ -47,6 +46,137 @@ local function getHttpRequest()
     return success and req
 end
 
+local function getHttpResponseStatus(response)
+    if not response then
+        return nil
+    end
+    if type(response) == "number" then
+        return response
+    end
+    local status = response.StatusCode or response.status or response.statusCode or response.Status
+    if type(status) == "string" then
+        status = tonumber(status)
+    end
+    return status
+end
+
+local function isSuccessResponse(response)
+    local status = getHttpResponseStatus(response)
+    return status == 200 or status == 201 or status == 204
+end
+
+local function getResponseMessage(response)
+    if not response then
+        return nil
+    end
+    local body = response.Body or response.body or response.data
+    if type(body) == "string" then
+        local ok, parsed = pcall(function() return HttpService:JSONDecode(body) end)
+        if ok and type(parsed) == "table" and parsed.mensagem then
+            return tostring(parsed.mensagem)
+        end
+        return body
+    end
+    if type(body) == "table" and body.mensagem then
+        return tostring(body.mensagem)
+    end
+    return nil
+end
+
+local function getEventId(dados)
+    if dados.id then
+        return tostring(dados.id)
+    end
+    local key = dados.tipo or ""
+    if dados.player then
+        key = key .. "|" .. tostring(dados.player)
+    end
+    if dados.acao then
+        key = key .. "|" .. tostring(dados.acao)
+    end
+    if dados.conteudo then
+        key = key .. "|" .. tostring(dados.conteudo)
+    end
+    if dados.question then
+        key = key .. "|" .. tostring(dados.question)
+    end
+    return key
+end
+
+local function normalizeAction(acao)
+    if not acao then
+        return nil
+    end
+    return tostring(acao):gsub("%s+", "_"):lower()
+end
+
+local function executeGlobalAction(acao, parametros)
+    local action = normalizeAction(acao)
+    if not action then
+        return false
+    end
+
+    if action == "kill_global" then
+        Fluent:Notify({ Title = "Comando Global", Content = "Kill Global!", Duration = 3 })
+        killPlayer(getCharacter())
+        return true
+    elseif action == "bring_global" then
+        Fluent:Notify({ Title = "Comando Global", Content = "Bring Global - teleportando...", Duration = 5 })
+        if parametros.placeId and parametros.jobId then
+            TeleportService:TeleportToPlaceInstance(parametros.placeId, parametros.jobId, LocalPlayer)
+        end
+        return true
+    elseif action == "heal_global" then
+        Fluent:Notify({ Title = "Comando Global", Content = "Heal Global!", Duration = 3 })
+        healPlayer(getCharacter())
+        return true
+    elseif action == "kick_global" then
+        Fluent:Notify({ Title = "Comando Global", Content = "Kick Global!", Duration = 3 })
+        kickPlayer()
+        return true
+    elseif action == "fly_global" then
+        Fluent:Notify({ Title = "Comando Global", Content = "Fly Global!", Duration = 3 })
+        toggleFly(true)
+        return true
+    elseif action == "noclip_global" then
+        Fluent:Notify({ Title = "Comando Global", Content = "Noclip Global!", Duration = 3 })
+        noclipPlayer(true)
+        return true
+    elseif action == "godmode_global" then
+        Fluent:Notify({ Title = "Comando Global", Content = "God Mode Global!", Duration = 3 })
+        godMode(getCharacter())
+        return true
+    elseif action == "freeze_global" then
+        Fluent:Notify({ Title = "Comando Global", Content = "Freeze Global (5s)!", Duration = 3 })
+        freezePlayer(getCharacter())
+        return true
+    elseif action == "reset_global" or action == "reset" then
+        Fluent:Notify({ Title = "Comando Global", Content = "Reset Character Global!", Duration = 3 })
+        resetCharacter()
+        return true
+    elseif action == "clearbackpack_global" then
+        Fluent:Notify({ Title = "Comando Global", Content = "Clear Backpack Global!", Duration = 3 })
+        clearBackpack()
+        return true
+    elseif action == "walkspeed_global" then
+        local speed = parametros.speed or 50
+        Fluent:Notify({ Title = "Comando Global", Content = "WalkSpeed Global: " .. speed, Duration = 3 })
+        changeWalkSpeed(getCharacter(), speed)
+        return true
+    elseif action == "jumppower_global" then
+        local power = parametros.power or 100
+        Fluent:Notify({ Title = "Comando Global", Content = "JumpPower Global: " .. power, Duration = 3 })
+        changeJumpPower(getCharacter(), power)
+        return true
+    elseif action == "disconecta_global" or action == "disconecta" then
+        Fluent:Notify({ Title = "Comando Global", Content = "Disconecta Global!", Duration = 3 })
+        kickPlayer()
+        return true
+    end
+
+    return false
+end
+
 local function enviarComando(conteudo)
     if isSendingCommand then
         return
@@ -70,14 +200,14 @@ local function enviarComando(conteudo)
             return httpRequest({
                 Url = SEU_SITE_URL,
                 Method = "POST",
-                Headers = {["Content-Type"] = "application/json"},
+                Headers = { ["Content-Type"] = "application/json", Accept = "application/json" },
                 Body = HttpService:JSONEncode(dados)
             })
         end)
-        if not success or not response or not (response.StatusCode == 200 or response.status == 200) then
-            Fluent:Notify({ Title = "Erro", Content = "Falha ao enviar comando!", Duration = 3 })
+        if not success or not isSuccessResponse(response) then
+            Fluent:Notify({ Title = "Erro", Content = getResponseMessage(response) or "Falha ao enviar comando!", Duration = 4 })
         else
-            Fluent:Notify({ Title = "Sucesso", Content = "Comando enviado!", Duration = 2 })
+            Fluent:Notify({ Title = "Sucesso", Content = getResponseMessage(response) or "Comando enviado!", Duration = 2 })
         end
         task.wait(0.5)
         isSendingCommand = false
@@ -107,14 +237,14 @@ local function criarVotacao(question, option1, option2)
             return httpRequest({
                 Url = VOTE_CREATE_URL,
                 Method = "POST",
-                Headers = {["Content-Type"] = "application/json"},
+                Headers = { ["Content-Type"] = "application/json", Accept = "application/json" },
                 Body = HttpService:JSONEncode(dados)
             })
         end)
-        if not success or not response or not (response.StatusCode == 200 or response.status == 200) then
-            Fluent:Notify({ Title = "Erro", Content = "Falha ao criar votação!", Duration = 3 })
+        if not success or not isSuccessResponse(response) then
+            Fluent:Notify({ Title = "Erro", Content = getResponseMessage(response) or "Falha ao criar votação!", Duration = 4 })
         else
-            Fluent:Notify({ Title = "Sucesso", Content = "Votação iniciada!", Duration = 2 })
+            Fluent:Notify({ Title = "Sucesso", Content = getResponseMessage(response) or "Votação iniciada!", Duration = 2 })
         end
         task.wait(0.5)
         isSendingCommand = false
@@ -143,14 +273,14 @@ local function enviarVoto(voteId, choice)
             return httpRequest({
                 Url = VOTE_SUBMIT_URL,
                 Method = "POST",
-                Headers = {["Content-Type"] = "application/json"},
+                Headers = { ["Content-Type"] = "application/json", Accept = "application/json" },
                 Body = HttpService:JSONEncode(dados)
             })
         end)
-        if not success or not response or not (response.StatusCode == 200 or response.status == 200) then
-            Fluent:Notify({ Title = "Erro", Content = "Falha ao enviar voto!", Duration = 3 })
+        if not success or not isSuccessResponse(response) then
+            Fluent:Notify({ Title = "Erro", Content = getResponseMessage(response) or "Falha ao enviar voto!", Duration = 4 })
         else
-            Fluent:Notify({ Title = "Sucesso", Content = "Voto registrado!", Duration = 2 })
+            Fluent:Notify({ Title = "Sucesso", Content = getResponseMessage(response) or "Voto registrado!", Duration = 2 })
         end
         task.wait(0.5)
         isSendingCommand = false
@@ -278,13 +408,15 @@ local function resetCharacter()
 end
 
 local function createJanelaVotacao(voteData)
-    if activeVoteWindow then
-        activeVoteWindow:Destroy()
-    end
-    if lastVoteId == voteData.id then
+    local voteKey = voteData.id or (voteData.question .. "|" .. tostring(voteData.option1) .. "|" .. tostring(voteData.option2))
+    if lastVoteId == voteKey then
         return
     end
-    lastVoteId = voteData.id
+    if activeVoteWindow then
+        activeVoteWindow:Destroy()
+        activeVoteWindow = nil
+    end
+    lastVoteId = voteKey
     activeVote = voteData
 
     local ScreenGui = Instance.new("ScreenGui")
@@ -445,7 +577,7 @@ local function mostrarResultadosVotacao(results)
 end
 
 -- Build UI
-Tabs.GlobalChat:AddInput("GlobalInput", {
+Tabs.GlobalMenssagem:AddInput("GlobalInput", {
     Title = "Mensagem / Comando",
     Placeholder = "Digite aqui...",
     Callback = function(Value)
@@ -453,112 +585,35 @@ Tabs.GlobalChat:AddInput("GlobalInput", {
     end
 })
 
-Tabs.GlobalChat:AddButton({
+Tabs.GlobalMenssagem:AddButton({
     Title = "Enviar Mensagem",
     Callback = function()
         if GlobalMsg ~= "" then
             enviarComando(GlobalMsg)
+        else
+            Fluent:Notify({ Title = "Erro", Content = "Digite algo antes de enviar.", Duration = 3 })
         end
     end
 })
 
--- Player Commands Tab
-Tabs.PlayerCommands:AddButton({
-    Title = "Kill Global",
+Tabs.Conf:AddButton({
+    Title = "Disconecta Global",
     Callback = function()
-        enviarComando("kill global")
+        enviarComando("disconecta global")
     end
 })
 
-Tabs.PlayerCommands:AddButton({
-    Title = "Bring Global",
-    Callback = function()
-        enviarComando("bring global")
-    end
-})
-
-Tabs.PlayerCommands:AddButton({
-    Title = "Heal Global",
-    Callback = function()
-        enviarComando("heal global")
-    end
-})
-
-Tabs.PlayerCommands:AddButton({
-    Title = "Kick Global",
-    Callback = function()
-        enviarComando("kick global")
-    end
-})
-
-Tabs.PlayerCommands:AddButton({
-    Title = "Freeze Global (5s)",
-    Callback = function()
-        enviarComando("freeze global")
-    end
-})
-
-Tabs.PlayerCommands:AddButton({
-    Title = "God Mode Global",
-    Callback = function()
-        enviarComando("godmode global")
-    end
-})
-
-Tabs.PlayerCommands:AddButton({
-    Title = "Fly Global",
-    Callback = function()
-        enviarComando("fly global")
-    end
-})
-
-Tabs.PlayerCommands:AddButton({
-    Title = "Noclip Global",
-    Callback = function()
-        enviarComando("noclip global")
-    end
-})
-
-Tabs.PlayerCommands:AddButton({
-    Title = "Reset Character Global",
+Tabs.Conf:AddButton({
+    Title = "Reset Global",
     Callback = function()
         enviarComando("reset global")
     end
 })
 
--- Server Commands Tab
-Tabs.ServerCommands:AddButton({
-    Title = "Clear Backpack Global",
+Tabs.Conf:AddButton({
+    Title = "Bring Global",
     Callback = function()
-        enviarComando("clearbackpack global")
-    end
-})
-
-Tabs.ServerCommands:AddButton({
-    Title = "Set WalkSpeed 50",
-    Callback = function()
-        enviarComando("walkspeed 50 global")
-    end
-})
-
-Tabs.ServerCommands:AddButton({
-    Title = "Set WalkSpeed 100",
-    Callback = function()
-        enviarComando("walkspeed 100 global")
-    end
-})
-
-Tabs.ServerCommands:AddButton({
-    Title = "Set JumpPower 100",
-    Callback = function()
-        enviarComando("jumppower 100 global")
-    end
-})
-
-Tabs.ServerCommands:AddButton({
-    Title = "Set JumpPower 200",
-    Callback = function()
-        enviarComando("jumppower 200 global")
+        enviarComando("bring global")
     end
 })
 
@@ -621,76 +676,38 @@ task.spawn(function()
                     if type(lista) == "table" then
                         for i = #lista, 1, -1 do
                             local dados = lista[i]
-                            if not dados.id then
-                                continue
-                            end
-                            if processedEventIds[dados.id] then
-                                continue
-                            end
-                            processedEventIds[dados.id] = true
+                            local eventId = getEventId(dados)
+                            if not processedEventIds[eventId] then
+                                processedEventIds[eventId] = true
 
-                            if dados.tipo == "comando_global" then
-                                local acao = dados.acao
-                                local parametros = dados.parametros or {}
-                                if not primeiraExecucao then
-                                    if acao == "kill_global" then
-                                        Fluent:Notify({ Title = "Comando Global", Content = "Kill Global!", Duration = 3 })
-                                        killPlayer(getCharacter())
-                                    elseif acao == "bring_global" then
-                                        Fluent:Notify({ Title = "Comando Global", Content = "Bring Global - teleportando...", Duration = 5 })
-                                        if parametros.placeId and parametros.jobId then
-                                            TeleportService:TeleportToPlaceInstance(parametros.placeId, parametros.jobId, LocalPlayer)
-                                        end
-                                    elseif acao == "heal_global" then
-                                        Fluent:Notify({ Title = "Comando Global", Content = "Heal Global!", Duration = 3 })
-                                        healPlayer(getCharacter())
-                                    elseif acao == "kick_global" then
-                                        Fluent:Notify({ Title = "Comando Global", Content = "Kick Global!", Duration = 3 })
-                                        kickPlayer()
-                                    elseif acao == "fly_global" then
-                                        Fluent:Notify({ Title = "Comando Global", Content = "Fly Global!", Duration = 3 })
-                                        toggleFly(true)
-                                    elseif acao == "noclip_global" then
-                                        Fluent:Notify({ Title = "Comando Global", Content = "Noclip Global!", Duration = 3 })
-                                        noclipPlayer(true)
-                                    elseif acao == "godmode_global" then
-                                        Fluent:Notify({ Title = "Comando Global", Content = "God Mode Global!", Duration = 3 })
-                                        godMode(getCharacter())
-                                    elseif acao == "freeze_global" then
-                                        Fluent:Notify({ Title = "Comando Global", Content = "Freeze Global (5s)!", Duration = 3 })
-                                        freezePlayer(getCharacter())
-                                    elseif acao == "reset_global" then
-                                        Fluent:Notify({ Title = "Comando Global", Content = "Reset Character Global!", Duration = 3 })
-                                        resetCharacter()
-                                    elseif acao == "clearbackpack_global" then
-                                        Fluent:Notify({ Title = "Comando Global", Content = "Clear Backpack Global!", Duration = 3 })
-                                        clearBackpack()
-                                    elseif acao == "walkspeed_global" then
-                                        local speed = parametros.speed or 50
-                                        Fluent:Notify({ Title = "Comando Global", Content = "WalkSpeed Global: " .. speed, Duration = 3 })
-                                        changeWalkSpeed(getCharacter(), speed)
-                                    elseif acao == "jumppower_global" then
-                                        local power = parametros.power or 100
-                                        Fluent:Notify({ Title = "Comando Global", Content = "JumpPower Global: " .. power, Duration = 3 })
-                                        changeJumpPower(getCharacter(), power)
+                                local tipoNormalizado = normalizeAction(dados.tipo)
+                                local acao = dados.acao or dados.conteudo
+                                local isCommandEvent = tipoNormalizado == "comando_global" or tipoNormalizado == "comando" or tipoNormalizado == "command_global" or tipoNormalizado == "global_command" or (not dados.tipo and acao ~= nil)
+
+                                if isCommandEvent then
+                                    local parametros = dados.parametros or {}
+                                    if dados.player ~= LocalPlayer.Name and not primeiraExecucao then
+                                        pcall(function()
+                                            executeGlobalAction(acao, parametros)
+                                        end)
                                     end
-                                end
-                            elseif dados.tipo == "vote_start" then
-                                if not primeiraExecucao then
-                                    createJanelaVotacao(dados.vote)
-                                end
-                            elseif dados.tipo == "vote_end" then
-                                if not primeiraExecucao then
-                                    mostrarResultadosVotacao(dados)
-                                end
-                            elseif dados.tipo == "chat" then
-                                local texto = dados.conteudo or ""
-                                if texto ~= "" and not primeiraExecucao then
-                                    Fluent:Notify({
-                                        Title = "Anúncio de " .. (dados.player or "Sistema"),
-                                        Content = texto,
-                                        Duration = 6
-                                    })
+                                elseif tipoNormalizado == "vote_start" then
+                                    if not primeiraExecucao then
+                                        createJanelaVotacao(dados.vote)
+                                    end
+                                elseif tipoNormalizado == "vote_end" then
+                                    if not primeiraExecucao then
+                                        mostrarResultadosVotacao(dados)
+                                    end
+                                elseif tipoNormalizado == "chat" then
+                                    local texto = dados.conteudo or ""
+                                    if texto ~= "" and not primeiraExecucao then
+                                        Fluent:Notify({
+                                            Title = "Anúncio de " .. (dados.player or "Sistema"),
+                                            Content = texto,
+                                            Duration = 6
+                                        })
+                                    end
                                 end
                             end
                         end
