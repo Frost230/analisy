@@ -1,10 +1,10 @@
 
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Embee Studio - Painel Global</title>
+    <title>Embee Studio Global Panel</title>
     <style>
         * {
             margin: 0;
@@ -13,311 +13,230 @@
         }
 
         :root {
-            --primary-color: #667eea;
-            --secondary-color: #764ba2;
-            --bg-dark: #07090f;
-            --bg-darker: #0a0a0a;
-            --bg-card: #111111;
-            --text-primary: #e7e9ef;
-            --text-secondary: #888888;
-            --border-color: #222222;
-            --success-color: #4ade80;
-            --warning-color: #f97316;
-            --error-color: #ef4444;
-            --info-color: #60a5fa;
+            --bg-black: #000000;
+            --bg-dark: #0a0a0a;
+            --bg-darker: #050505;
+            --bg-card: #1a1a1a;
+            --text-primary: #ffffff;
+            --text-secondary: #cccccc;
+            --text-muted: #888888;
+            --border-color: #2a2a2a;
+            --accent: #ffffff;
+            --success-color: #00ff00;
+            --warning-color: #ffaa00;
+            --error-color: #ff0000;
+            --info-color: #00ccff;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, var(--bg-dark) 0%, #1a1a2e 50%, var(--bg-dark) 100%));
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+            background: var(--bg-black);
             color: var(--text-primary);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            animation: fadeIn 0.5s ease-in;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
         }
 
         header {
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
-            backdrop-filter: blur(10px);
-            padding: 2rem;
-            text-align: center;
-            border-bottom: 2px solid var(--primary-color);
-            box-shadow: 0 8px 32px rgba(102, 126, 234, 0.15);
-            position: sticky;
-            top: 0;
-            z-index: 100;
+            background: var(--bg-dark);
+            padding: 2.5rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
         }
 
         .header-content {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
             display: flex;
             flex-wrap: wrap;
             justify-content: space-between;
             align-items: center;
-            gap: 1rem;
+            gap: 2rem;
         }
 
         h1 {
             font-size: 2.5rem;
-            color: #ffffff;
-            letter-spacing: 1px;
-            margin-bottom: 0.25rem;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            color: var(--text-primary);
         }
 
         .github-link {
             display: inline-flex;
             align-items: center;
-            gap: 0.5rem;
-            color: #ffffff;
+            gap: 0.75rem;
+            color: var(--text-primary);
             text-decoration: none;
-            padding: 0.75rem 1.25rem;
-            border-radius: 10px;
-            background: var(--primary-color);
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
             transition: all 0.3s ease;
             white-space: nowrap;
-            font-weight: 600;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            font-weight: 500;
         }
 
         .github-link:hover {
-            background: var(--secondary-color);
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+            border-color: var(--text-primary);
+            background: #2a2a2a;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
         }
 
         .github-icon {
-            width: 24px;
-            height: 24px;
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
         }
 
         .dev-credit {
             margin-top: 0.5rem;
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-            font-style: italic;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            display: block;
         }
 
         main {
             flex: 1;
-            padding: 2rem;
-            max-width: 1200px;
+            padding: 3rem 2rem;
+            max-width: 1400px;
             margin: 0 auto;
             width: 100%;
         }
 
         .container {
-            background: rgba(10, 10, 10, 0.5);
-            backdrop-filter: blur(10px);
-            border-radius: 16px;
+            background: var(--bg-card);
+            border-radius: 8px;
             padding: 2.5rem;
             margin-bottom: 2.5rem;
             border: 1px solid var(--border-color);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-            animation: slideUp 0.5s ease-out;
-        }
-
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
         }
 
         .container h2 {
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
             color: var(--text-primary);
-            font-size: 1.75rem;
-            border-bottom: 2px solid var(--primary-color);
-            padding-bottom: 0.75rem;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .container h2::before {
-            content: '';
-            width: 4px;
-            height: 24px;
-            background: var(--primary-color);
-            border-radius: 2px;
+            font-size: 1.5rem;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1rem;
         }
 
         .status-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 1.5rem;
             margin-bottom: 1rem;
         }
 
         .status-card {
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.05) 100%);
+            background: var(--bg-darker);
             padding: 2rem;
-            border-radius: 14px;
-            border: 1px solid var(--primary-color);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
             text-align: center;
             transition: all 0.3s ease;
-            min-height: 160px;
+            min-height: 150px;
             display: flex;
             flex-direction: column;
             justify-content: center;
             gap: 0.75rem;
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .status-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-            transition: left 0.5s ease;
-        }
-
-        .status-card:hover::before {
-            left: 100%;
         }
 
         .status-card:hover {
-            border-color: var(--primary-color);
-            transform: translateY(-8px);
-            box-shadow: 0 12px 28px rgba(102, 126, 234, 0.25);
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.1) 100%);
+            border-color: var(--text-primary);
+            box-shadow: 0 6px 16px rgba(255, 255, 255, 0.08);
+            transform: translateY(-2px);
         }
 
         .status-card h3 {
-            color: var(--text-secondary);
-            font-size: 0.95rem;
+            color: var(--text-muted);
+            font-size: 0.85rem;
             margin-bottom: 0.5rem;
             text-transform: uppercase;
             letter-spacing: 1px;
-            font-weight: 600;
+            font-weight: 500;
         }
 
         .status-card p {
             font-size: 2.5rem;
-            font-weight: bold;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            font-weight: 700;
+            color: var(--text-primary);
         }
 
         .command-item {
-            background: rgba(17, 17, 17, 0.8);
-            padding: 1.25rem 1.5rem;
-            margin-bottom: 0.75rem;
-            border-radius: 12px;
-            border-left: 4px solid var(--primary-color);
+            background: var(--bg-darker);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-radius: 8px;
+            border-left: 3px solid var(--text-primary);
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
             transition: all 0.2s ease;
             gap: 1rem;
             border: 1px solid var(--border-color);
-            animation: slideIn 0.3s ease-out;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateX(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
         }
 
         .command-item:hover {
-            background: rgba(30, 30, 50, 0.9);
+            background: #2a2a2a;
             transform: translateX(4px);
-            border-color: var(--primary-color);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
         }
 
         .command-type {
             display: inline-block;
-            padding: 0.35rem 0.85rem;
-            border-radius: 6px;
-            font-size: 0.75rem;
-            font-weight: bold;
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
         }
 
         .type-chat {
-            background: linear-gradient(135deg, #1e3a5f, #2d5a8c);
+            background: #1a2a3a;
             color: var(--info-color);
         }
 
         .type-command {
-            background: linear-gradient(135deg, #5f3a1e, #8c6a2d);
+            background: #3a2a1a;
             color: var(--warning-color);
         }
 
         .type-vote {
-            background: linear-gradient(135deg, #1f4d1f, #2d8c2d);
+            background: #1a3a1a;
             color: var(--success-color);
         }
 
         .command-meta {
             font-size: 0.8rem;
-            color: var(--text-secondary);
+            color: var(--text-muted);
             margin-top: 0.75rem;
         }
 
         .command-item strong {
-            color: var(--primary-color);
+            color: var(--text-secondary);
         }
 
         footer {
             text-align: center;
             padding: 2rem 1.5rem;
-            background: linear-gradient(180deg, var(--bg-darker), rgba(10, 10, 10, 0.8));
+            background: var(--bg-dark);
             border-top: 1px solid var(--border-color);
-            color: var(--text-secondary);
+            color: var(--text-muted);
             font-size: 0.9rem;
         }
 
         .empty-state {
             text-align: center;
             padding: 3rem 2rem;
-            color: var(--text-secondary);
+            color: var(--text-muted);
         }
 
         .empty-state-icon {
             font-size: 3rem;
             margin-bottom: 1rem;
-            opacity: 0.5;
+            opacity: 0.4;
         }
 
         @media (max-width: 768px) {
@@ -326,7 +245,7 @@
             }
 
             main {
-                padding: 1rem;
+                padding: 1.5rem;
             }
 
             .container {
@@ -340,24 +259,28 @@
             header {
                 padding: 1.5rem;
             }
+
+            .github-link {
+                padding: 0.6rem 1rem;
+                font-size: 0.9rem;
+            }
         }
 
-        /* Scrollbar custom */
         ::-webkit-scrollbar {
             width: 10px;
         }
 
         ::-webkit-scrollbar-track {
-            background: var(--bg-darker);
+            background: var(--bg-dark);
         }
 
         ::-webkit-scrollbar-thumb {
-            background: var(--primary-color);
+            background: var(--border-color);
             border-radius: 5px;
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: var(--secondary-color);
+            background: var(--text-muted);
         }
     </style>
 </head>
@@ -366,41 +289,48 @@
         <div class="header-content">
             <h1>Embee Studio</h1>
             <a href="https://github.com/Frost230/analisy" target="_blank" class="github-link">
+                <svg class="github-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.01 12.01 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
+                </svg>
                 GitHub
             </a>
         </div>
-        <p class="dev-credit">Desenvolvido por frost230_0</p>
+        <span class="dev-credit">Developed by frost230_0</span>
     </header>
 
     <main>
         <div class="container">
-            <h2>Status do Sistema</h2>
+            <h2>System Status</h2>
             <div class="status-grid">
                 <div class="status-card">
-                    <h3>Total de Eventos</h3>
+                    <h3>Total Events</h3>
                     <p id="totalEvents">0</p>
                 </div>
                 <div class="status-card">
-                    <h3>Comandos Executados</h3>
+                    <h3>Commands Executed</h3>
                     <p id="totalCommands">0</p>
                 </div>
                 <div class="status-card">
-                    <h3>Votações Realizadas</h3>
+                    <h3>Votes Performed</h3>
                     <p id="totalVotes">0</p>
                 </div>
             </div>
         </div>
 
         <div class="container">
-            <h2>Histórico de Eventos</h2>
+            <h2>Event History</h2>
             <div id="historyContainer">
-                <p style="color: #888888; text-align: center; padding: 2rem;">Aguardando eventos...</p>
+                <div class="empty-state">
+                    <div class="empty-state-icon">📋</div>
+                    <p>Awaiting events...</p>
+                    <p style="font-size: 0.85rem; margin-top: 0.5rem; color: #666666;">Panel updates automatically every 1.5 seconds</p>
+                </div>
             </div>
         </div>
     </main>
 
     <footer>
-        <p>&copy; 2026 Embee Studio. Todos os direitos reservados.</p>
+        <p>&copy; 2026 Embee Studio. All rights reserved. | Global Event Management System</p>
     </footer>
 
     <script>
@@ -420,7 +350,7 @@
                 });
 
                 if (!response.ok) {
-                    throw new Error(`Erro HTTP: ${response.status}`);
+                    throw new Error(`HTTP Error: ${response.status}`);
                 }
 
                 const data = await response.json();
@@ -430,7 +360,7 @@
                     lastUpdate = Date.now();
                 }
             } catch (error) {
-                console.error('Erro ao buscar comandos:', error);
+                console.error('Error fetching commands:', error);
                 showErrorMessage();
             }
         }
@@ -442,8 +372,8 @@
                 historyContainer.innerHTML = `
                     <div class="empty-state">
                         <div class="empty-state-icon">📋</div>
-                        <p>Aguardando eventos...</p>
-                        <p style="font-size: 0.85rem; margin-top: 0.5rem;">O painel atualizará automaticamente a cada 1.5 segundos</p>
+                        <p>Awaiting events...</p>
+                        <p style="font-size: 0.85rem; margin-top: 0.5rem; color: #666666;">Panel updates automatically every 1.5 seconds</p>
                     </div>
                 `;
                 resetCounters();
@@ -451,7 +381,6 @@
             }
 
             try {
-                // Atualiza contadores
                 totalEvents = commands.length;
                 totalCommands = commands.filter(c => c.tipo === 'comando_global').length;
                 totalVotes = commands.filter(c => c.tipo === 'vote_start').length;
@@ -460,7 +389,6 @@
                 document.getElementById('totalCommands').textContent = totalCommands;
                 document.getElementById('totalVotes').textContent = totalVotes;
 
-                // Renderiza histórico (últimos 50 eventos)
                 historyContainer.innerHTML = commands.slice(0, 50).map(event => {
                     let typeClass = 'type-chat';
                     let typeText = 'Chat';
@@ -468,41 +396,41 @@
 
                     if (event.tipo === 'comando_global') {
                         typeClass = 'type-command';
-                        typeText = 'Comando';
-                        content = event.acao || event.conteudo || 'Comando executado';
+                        typeText = 'Command';
+                        content = event.acao || event.conteudo || 'Command executed';
                     } else if (event.tipo === 'vote_start') {
                         typeClass = 'type-vote';
-                        typeText = 'Votação';
-                        content = event.vote ? event.vote.question : 'Nova votação iniciada';
+                        typeText = 'Vote';
+                        content = event.vote ? event.vote.question : 'New vote started';
                     } else if (event.tipo === 'vote_end') {
                         typeClass = 'type-vote';
-                        typeText = 'Resultado';
+                        typeText = 'Result';
                         if (event.results && event.vote) {
-                            content = `${event.vote.option1}: ${event.results.option1}% | ${event.vote.option2}: ${event.results.option2}% (Total: ${event.results.total} votos)`;
+                            content = `${event.vote.option1}: ${event.results.option1}% | ${event.vote.option2}: ${event.results.option2}% (Total: ${event.results.total} votes)`;
                         } else {
-                            content = 'Votação encerrada';
+                            content = 'Vote finished';
                         }
                     } else {
-                        content = event.conteudo || 'Evento desconhecido';
+                        content = event.conteudo || 'Unknown event';
                     }
 
                     const date = new Date(event.timestamp);
-                    const time = date.toLocaleTimeString('pt-BR');
+                    const time = date.toLocaleTimeString('en-US', { hour12: false });
 
                     return `
                         <div class="command-item">
                             <div style="flex: 1;">
                                 <span class="command-type ${typeClass}">${typeText}</span>
                                 <div style="margin-top: 0.5rem;">
-                                    <strong>${escapeHtml(event.player || 'Sistema')}:</strong> ${escapeHtml(content)}
+                                    <strong>${escapeHtml(event.player || 'System')}:</strong> ${escapeHtml(content)}
                                 </div>
-                                <div class="command-meta">🕐 ${time}</div>
+                                <div class="command-meta">TIME: ${time}</div>
                             </div>
                         </div>
                     `;
                 }).join('');
             } catch (error) {
-                console.error('Erro ao atualizar UI:', error);
+                console.error('Error updating UI:', error);
                 showErrorMessage();
             }
         }
@@ -517,7 +445,7 @@
         function showErrorMessage() {
             const historyContainer = document.getElementById('historyContainer');
             if (historyContainer && !historyContainer.querySelector('.empty-state')) {
-                console.warn('Erro ao conectar com o servidor. Verifique sua conexão.');
+                console.warn('Error connecting to server. Please check your connection.');
             }
         }
 
@@ -527,13 +455,11 @@
             document.getElementById('totalVotes').textContent = '0';
         }
 
-        // Inicializa
         document.addEventListener('DOMContentLoaded', () => {
             fetchCommands();
             setInterval(fetchCommands, UPDATE_INTERVAL);
         });
 
-        // Fallback caso DOMContentLoaded não dispare
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => {
                 fetchCommands();
