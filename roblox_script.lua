@@ -111,6 +111,20 @@ local function normalizeAction(acao)
     return tostring(acao):gsub("%s+", "_"):lower()
 end
 
+local function safeString(value)
+    if value == nil then
+        return nil
+    end
+    return tostring(value)
+end
+
+local function safeNumber(value)
+    if typeof(value) == "number" then
+        return value
+    end
+    return tonumber(value)
+end
+
 local function executeGlobalAction(acao, parametros)
     local action = normalizeAction(acao)
     if not action then
@@ -119,17 +133,30 @@ local function executeGlobalAction(acao, parametros)
 
     if action == "kill_global" then
         Fluent:Notify({ Title = "Comando Global", Content = "Kill Global!", Duration = 3 })
-        killPlayer(getCharacter())
+        pcall(function()
+            killPlayer(getCharacter())
+        end)
         return true
     elseif action == "bring_global" then
         Fluent:Notify({ Title = "Comando Global", Content = "Bring Global - teleportando...", Duration = 5 })
-        if parametros.placeId and parametros.jobId then
-            TeleportService:TeleportToPlaceInstance(parametros.placeId, parametros.jobId, LocalPlayer)
+        local placeId = safeNumber(parametros.placeId)
+        local jobId = safeString(parametros.jobId)
+        if placeId and jobId and jobId ~= "" then
+            local ok, err = pcall(function()
+                TeleportService:TeleportToPlaceInstance(placeId, jobId, LocalPlayer)
+            end)
+            if not ok then
+                Fluent:Notify({ Title = "Erro", Content = "Bring Global falhou: " .. tostring(err), Duration = 5 })
+            end
+        else
+            Fluent:Notify({ Title = "Erro", Content = "Bring Global falhou: parâmetros de teleport inválidos.", Duration = 5 })
         end
         return true
     elseif action == "heal_global" then
         Fluent:Notify({ Title = "Comando Global", Content = "Heal Global!", Duration = 3 })
-        healPlayer(getCharacter())
+        pcall(function()
+            healPlayer(getCharacter())
+        end)
         return true
     elseif action == "kick_global" then
         Fluent:Notify({ Title = "Comando Global", Content = "Kick Global!", Duration = 3 })
@@ -577,7 +604,6 @@ local function mostrarResultadosVotacao(results)
     })
 end
 
--- Build UI
 Tabs.GlobalMenssagem:AddInput("GlobalInput", {
     Title = "Mensagem / Comando",
     Placeholder = "Digite aqui...",
@@ -618,7 +644,6 @@ Tabs.Conf:AddButton({
     end
 })
 
--- Vote Tab
 Tabs.VoteGlobal:AddInput("VoteQuestion", {
     Title = "Pergunta da Votação",
     Placeholder = "Digite a pergunta...",
@@ -656,7 +681,6 @@ Tabs.VoteGlobal:AddButton({
 
 Window:SelectTab(1)
 
--- Listener loop
 task.spawn(function()
     local primeiraExecucao = true
     while true do
@@ -697,7 +721,7 @@ task.spawn(function()
 
                                 if isCommandEvent then
                                     local parametros = dados.parametros or {}
-                                    if dados.player ~= LocalPlayer.Name and not primeiraExecucao then
+                                    if not primeiraExecucao then
                                         pcall(function()
                                             executeGlobalAction(acao, parametros)
                                         end)

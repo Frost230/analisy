@@ -1,3 +1,4 @@
+// Frost230_0
 
 const path = require('path');
 const express = require('express');
@@ -7,12 +8,12 @@ const xss = require('xss-clean');
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Middleware de segurança
-app.use(helmet()); // Helmet para headers de segurança
-app.use(xss()); // Sanitiza entrada para prevenir XSS
-app.use(express.json({ limit: '10kb' })); // Limita tamanho do body para prevenir ataques
 
-// CORS middleware para permitir requisições do Roblox
+app.use(helmet());
+app.use(xss());
+app.use(express.json({ limit: '10kb' }));
+
+
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
@@ -23,54 +24,54 @@ app.use((req, res, next) => {
     next();
 });
 
-// Rate Limiting para prevenir DDoS
+
 const apiLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutos
-    max: 100, // Limita a 100 requisições por IP por window para write endpoints
+    windowMs: 15 * 60 * 1000,
+    max: 100,
     message: 'Muitas requisições! Tente novamente mais tarde.'
 });
-// Read endpoints get a higher limit (many clients may poll)
+
 const readLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 1000,
     message: 'Muitas requisições! Tente novamente mais tarde.'
 });
-// Note: do NOT apply a global limiter to all /api/ routes; apply per-route below to avoid blocking frequent GETs (comandos/stream).
 
-// Dados em memória
+
+
 const history = [];
 const MAX_HISTORY = 200;
 let currentVote = null;
 let idCounter = 0;
-// SSE subscribers
+
 const sseSubscribers = new Set();
 
-// Função para gerar ID único
+
 function generateUniqueId() {
     return Date.now().toString(36) + (++idCounter).toString(36) + Math.random().toString(36).substr(2);
 }
 
-// Adiciona evento ao histórico
+
 function addToHistory(event) {
     event.id = generateUniqueId();
     event.timestamp = new Date().toISOString();
-    event.ts = Date.now(); // numeric timestamp (ms) for efficient filtering
+    event.ts = Date.now();
     history.unshift(event);
     if (history.length > MAX_HISTORY) {
         history.pop();
     }
-    // Notify SSE subscribers (send new event)
+
     const payload = `data: ${JSON.stringify(event)}\n\n`;
     for (const res of sseSubscribers) {
         try {
             res.write(payload);
         } catch (err) {
-            // ignore individual subscriber errors
+
         }
     }
 }
 
-// Detecta comandos globais no texto
+
 function detectGlobalCommand(text, body) {
     const lower = (text || '').toLowerCase();
     const commandPatterns = [
@@ -112,10 +113,10 @@ function detectGlobalCommand(text, body) {
     return null;
 }
 
-// Serve frontend
+
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Rota para analisar mensagem/comando
+
 app.post('/api/analisar', apiLimiter, (req, res) => {
     try {
         const { player, conteudo, placeId, jobId } = req.body;
@@ -128,7 +129,7 @@ app.post('/api/analisar', apiLimiter, (req, res) => {
             });
         }
 
-        // Limita tamanho da mensagem
+
         if (text.length > 500) {
             return res.status(400).json({
                 sucesso: false,
@@ -162,7 +163,7 @@ app.post('/api/analisar', apiLimiter, (req, res) => {
     }
 });
 
-// Rota para criar votação
+
 app.post('/api/vote/create', apiLimiter, (req, res) => {
     try {
         const { player, question, option1, option2 } = req.body;
@@ -200,7 +201,7 @@ app.post('/api/vote/create', apiLimiter, (req, res) => {
 
         addToHistory(voteEvent);
 
-        // Timer para encerrar votação
+
         setTimeout(() => {
             try {
                 if (currentVote) {
@@ -237,7 +238,7 @@ app.post('/api/vote/create', apiLimiter, (req, res) => {
     }
 });
 
-// Rota para enviar voto
+
 app.post('/api/vote/submit', apiLimiter, (req, res) => {
     try {
         const { player, voteId, choice } = req.body;
@@ -274,7 +275,7 @@ app.post('/api/vote/submit', apiLimiter, (req, res) => {
     }
 });
 
-// Rota para obter comandos/eventos
+
 app.get('/api/comandos', readLimiter, (req, res) => {
     try {
         const since = req.query.since ? parseInt(req.query.since, 10) : 0;
@@ -292,9 +293,9 @@ app.get('/api/comandos', readLimiter, (req, res) => {
     }
 });
 
-// SSE endpoint for real-time updates from server (reduces client polling)
+
 app.get('/api/stream', (req, res) => {
-    // Set headers for SSE
+
     res.set({
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
@@ -302,7 +303,7 @@ app.get('/api/stream', (req, res) => {
     });
     res.flushHeaders && res.flushHeaders();
 
-    // Send a ping to establish connection
+
     res.write('event: connected\n');
     res.write('data: {"ok":true}\n\n');
 
@@ -313,7 +314,7 @@ app.get('/api/stream', (req, res) => {
     });
 });
 
-// Rota para obter votação atual
+
 app.get('/api/vote/current', (req, res) => {
     try {
         return res.status(200).json({ sucesso: true, vote: currentVote });
@@ -335,7 +336,7 @@ app.get('/', (req, res) => {
     }
 });
 
-// Tratamento de erros global
+
 app.use((err, req, res, next) => {
     console.error('Erro não tratado:', err);
     res.status(500).json({
@@ -344,7 +345,7 @@ app.use((err, req, res, next) => {
     });
 });
 
-// Rota 404
+
 app.use((req, res) => {
     res.status(404).json({
         sucesso: false,
@@ -352,15 +353,15 @@ app.use((req, res) => {
     });
 });
 
-// Inicia o servidor
+
 const server = app.listen(port, () => {
     console.log(`\n✅ Embee Studio Server rodando na porta ${port}`);
-    console.log(`🌐 URL: http://localhost:${port}`);
+    console.log(`🌐 URL: http:
     console.log('🔒 Segurança ativada: Helmet, XSS-Clean, Rate Limiting, CORS');
     console.log('📝 Status: Pronto para receber requisições\n');
 });
 
-// Tratamento de erros não capturados
+
 process.on('unhandledRejection', (reason, promise) => {
     console.error('❌ Promise rejection não tratada:', reason);
 });
@@ -370,7 +371,7 @@ process.on('uncaughtException', (error) => {
     process.exit(1);
 });
 
-// Graceful shutdown
+
 process.on('SIGTERM', () => {
     console.log('📍 SIGTERM recebido, encerrando servidor...');
     server.close(() => {
