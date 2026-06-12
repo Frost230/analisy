@@ -26,10 +26,16 @@ app.use((req, res, next) => {
 // Rate Limiting para prevenir DDoS
 const apiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutos
-    max: 100, // Limita a 100 requisições por IP por window
+    max: 100, // Limita a 100 requisições por IP por window para write endpoints
     message: 'Muitas requisições! Tente novamente mais tarde.'
 });
-app.use('/api/', apiLimiter); // Aplica limitação a todas rotas API
+// Read endpoints get a higher limit (many clients may poll)
+const readLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 1000,
+    message: 'Muitas requisições! Tente novamente mais tarde.'
+});
+// Note: do NOT apply a global limiter to all /api/ routes; apply per-route below to avoid blocking frequent GETs (comandos/stream).
 
 // Dados em memória
 const history = [];
@@ -110,7 +116,7 @@ function detectGlobalCommand(text, body) {
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Rota para analisar mensagem/comando
-app.post('/api/analisar', (req, res) => {
+app.post('/api/analisar', apiLimiter, (req, res) => {
     try {
         const { player, conteudo, placeId, jobId } = req.body;
         const text = (conteudo || '').toString().trim();
@@ -157,7 +163,7 @@ app.post('/api/analisar', (req, res) => {
 });
 
 // Rota para criar votação
-app.post('/api/vote/create', (req, res) => {
+app.post('/api/vote/create', apiLimiter, (req, res) => {
     try {
         const { player, question, option1, option2 } = req.body;
 
@@ -232,7 +238,7 @@ app.post('/api/vote/create', (req, res) => {
 });
 
 // Rota para enviar voto
-app.post('/api/vote/submit', (req, res) => {
+app.post('/api/vote/submit', apiLimiter, (req, res) => {
     try {
         const { player, voteId, choice } = req.body;
 
@@ -269,7 +275,7 @@ app.post('/api/vote/submit', (req, res) => {
 });
 
 // Rota para obter comandos/eventos
-app.get('/api/comandos', (req, res) => {
+app.get('/api/comandos', readLimiter, (req, res) => {
     try {
         const since = req.query.since ? parseInt(req.query.since, 10) : 0;
         if (since && !isNaN(since)) {
