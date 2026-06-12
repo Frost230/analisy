@@ -337,102 +337,93 @@
         let totalEvents = 0;
         let totalCommands = 0;
         let totalVotes = 0;
-        let lastUpdate = 0;
-        const UPDATE_INTERVAL = 1500;
+        let commands = [];
 
-        async function fetchCommands() {
+        async function loadInitialCommands() {
             try {
-                const response = await fetch('/api/comandos', {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json'
+                const resp = await fetch('/api/comandos');
+                if (resp.ok) {
+                    const data = await resp.json();
+                    if (data.sucesso && Array.isArray(data.comandos)) {
+                        commands = data.comandos.slice(0, 200);
+                        renderCommands();
                     }
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP Error: ${response.status}`);
                 }
-
-                const data = await response.json();
-
-                if (data.sucesso && Array.isArray(data.comandos)) {
-                    updateUI(data.comandos);
-                    lastUpdate = Date.now();
-                }
-            } catch (error) {
-                console.error('Error fetching commands:', error);
-                showErrorMessage();
+            } catch (err) {
+                console.error('Error loading initial commands:', err);
             }
         }
 
-        function updateUI(commands) {
-            const historyContainer = document.getElementById('historyContainer');
+        function applyEvent(event) {
+            // prepend
+            commands.unshift(event);
+            // keep max
+            if (commands.length > 200) commands.length = 200;
+            renderCommands();
+        }
 
+        function renderCommands() {
+            const historyContainer = document.getElementById('historyContainer');
             if (!commands || commands.length === 0) {
                 historyContainer.innerHTML = `
                     <div class="empty-state">
                         <div class="empty-state-icon">📋</div>
                         <p>Awaiting events...</p>
-                        <p style="font-size: 0.85rem; margin-top: 0.5rem; color: #666666;">Panel updates automatically every 1.5 seconds</p>
+                        <p style="font-size: 0.85rem; margin-top: 0.5rem; color: #666666;">Panel updates automatically</p>
                     </div>
                 `;
                 resetCounters();
                 return;
             }
 
-            try {
-                totalEvents = commands.length;
-                totalCommands = commands.filter(c => c.tipo === 'comando_global').length;
-                totalVotes = commands.filter(c => c.tipo === 'vote_start').length;
+            totalEvents = commands.length;
+            totalCommands = commands.filter(c => c.tipo === 'comando_global').length;
+            totalVotes = commands.filter(c => c.tipo === 'vote_start').length;
 
-                document.getElementById('totalEvents').textContent = totalEvents;
-                document.getElementById('totalCommands').textContent = totalCommands;
-                document.getElementById('totalVotes').textContent = totalVotes;
+            document.getElementById('totalEvents').textContent = totalEvents;
+            document.getElementById('totalCommands').textContent = totalCommands;
+            document.getElementById('totalVotes').textContent = totalVotes;
 
-                historyContainer.innerHTML = commands.slice(0, 50).map(event => {
-                    let typeClass = 'type-chat';
-                    let typeText = 'Chat';
-                    let content = '';
+            historyContainer.innerHTML = commands.slice(0, 50).map(event => {
+                let typeClass = 'type-chat';
+                let typeText = 'Chat';
+                let content = '';
 
-                    if (event.tipo === 'comando_global') {
-                        typeClass = 'type-command';
-                        typeText = 'Command';
-                        content = event.acao || event.conteudo || 'Command executed';
-                    } else if (event.tipo === 'vote_start') {
-                        typeClass = 'type-vote';
-                        typeText = 'Vote';
-                        content = event.vote ? event.vote.question : 'New vote started';
-                    } else if (event.tipo === 'vote_end') {
-                        typeClass = 'type-vote';
-                        typeText = 'Result';
-                        if (event.results && event.vote) {
-                            content = `${event.vote.option1}: ${event.results.option1}% | ${event.vote.option2}: ${event.results.option2}% (Total: ${event.results.total} votes)`;
-                        } else {
-                            content = 'Vote finished';
-                        }
+                if (event.tipo === 'comando_global') {
+                    typeClass = 'type-command';
+                    typeText = 'Command';
+                    content = event.acao || event.conteudo || 'Command executed';
+                } else if (event.tipo === 'vote_start') {
+                    typeClass = 'type-vote';
+                    typeText = 'Vote';
+                    content = event.vote ? event.vote.question : 'New vote started';
+                } else if (event.tipo === 'vote_end') {
+                    typeClass = 'type-vote';
+                    typeText = 'Result';
+                    if (event.results && event.vote) {
+                        content = `${event.vote.option1}: ${event.results.option1}% | ${event.vote.option2}: ${event.results.option2}% (Total: ${event.results.total} votes)`;
                     } else {
-                        content = event.conteudo || 'Unknown event';
+                        content = 'Vote finished';
                     }
+                } else {
+                    content = event.conteudo || 'Unknown event';
+                }
 
-                    const date = new Date(event.timestamp);
-                    const time = date.toLocaleTimeString('en-US', { hour12: false });
+                const date = new Date(event.timestamp);
+                const time = date.toLocaleTimeString('en-US', { hour12: false });
 
-                    return `
-                        <div class="command-item">
-                            <div style="flex: 1;">
-                                <span class="command-type ${typeClass}">${typeText}</span>
-                                <div style="margin-top: 0.5rem;">
-                                    <strong>${escapeHtml(event.player || 'System')}:</strong> ${escapeHtml(content)}
-                                </div>
-                                <div class="command-meta">TIME: ${time}</div>
+                return `
+                    <div class="command-item">
+                        <div style="flex: 1;">
+                            <span class="command-type ${typeClass}">${typeText}</span>
+                            <div style="margin-top: 0.5rem;">
+                                <strong>${escapeHtml(event.player || 'System')}:</strong> ${escapeHtml(content)}
                             </div>
+                            <div class="command-meta">TIME: ${time}</div>
                         </div>
-                    `;
-                }).join('');
-            } catch (error) {
-                console.error('Error updating UI:', error);
-                showErrorMessage();
-            }
+                    </div>
+                `;
+            }).join('');
         }
 
         function escapeHtml(text) {
@@ -455,20 +446,38 @@
             document.getElementById('totalVotes').textContent = '0';
         }
 
+        // Initialize: load initial data and open SSE stream
         document.addEventListener('DOMContentLoaded', () => {
-            fetchCommands();
-            setInterval(fetchCommands, UPDATE_INTERVAL);
-        });
+            loadInitialCommands();
 
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => {
+            // Open SSE connection
+            try {
+                const es = new EventSource('/api/stream');
+                es.onmessage = (evt) => {
+                    try {
+                        const data = JSON.parse(evt.data);
+                        if (data && data.id) {
+                            applyEvent(data);
+                        }
+                    } catch (err) {
+                        // ignore non-JSON pings
+                    }
+                };
+                es.addEventListener('connected', () => {
+                    console.info('SSE connected');
+                });
+                es.onerror = (err) => {
+                    console.warn('SSE error', err);
+                    // fallback: reload initial commands occasionally
+                    setTimeout(() => loadInitialCommands(), 5000);
+                };
+            } catch (err) {
+                console.error('EventSource not supported, falling back to polling', err);
+                // fallback to polling
                 fetchCommands();
-                setInterval(fetchCommands, UPDATE_INTERVAL);
-            });
-        } else {
-            fetchCommands();
-            setInterval(fetchCommands, UPDATE_INTERVAL);
-        }
+                setInterval(fetchCommands, 1500);
+            }
+        });
     </script>
 </body>
 </html>

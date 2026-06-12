@@ -38,6 +38,7 @@ local VoteQuestion = ""
 local VoteOption1 = ""
 local VoteOption2 = ""
 local GlobalMsg = ""
+local lastFetchTs = 0
 
 local function getHttpRequest()
     local success, req = pcall(function()
@@ -661,10 +662,15 @@ task.spawn(function()
     while true do
         local httpRequest = getHttpRequest()
         if httpRequest then
+            local url = COMANDOS_URL
+            if lastFetchTs and lastFetchTs > 0 then
+                url = url .. "?since=" .. tostring(lastFetchTs)
+            end
             local success, response = pcall(function()
                 return httpRequest({
-                    Url = COMANDOS_URL,
-                    Method = "GET"
+                    Url = url,
+                    Method = "GET",
+                    Headers = { ["Accept"] = "application/json" }
                 })
             end)
             if success and response and (response.StatusCode == 200 or response.status == 200) and response.Body then
@@ -676,6 +682,11 @@ task.spawn(function()
                     if type(lista) == "table" then
                         for i = #lista, 1, -1 do
                             local dados = lista[i]
+                            if dados and dados.ts then
+                                if tonumber(dados.ts) and tonumber(dados.ts) > lastFetchTs then
+                                    lastFetchTs = tonumber(dados.ts)
+                                end
+                            end
                             local eventId = getEventId(dados)
                             if not processedEventIds[eventId] then
                                 processedEventIds[eventId] = true

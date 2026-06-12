@@ -36,6 +36,8 @@ const history = [];
 const MAX_HISTORY = 200;
 let currentVote = null;
 let idCounter = 0;
+// SSE subscribers
+const sseSubscribers = new Set();
 
 // Função para gerar ID único
 function generateUniqueId() {
@@ -46,9 +48,19 @@ function generateUniqueId() {
 function addToHistory(event) {
     event.id = generateUniqueId();
     event.timestamp = new Date().toISOString();
+    event.ts = Date.now(); // numeric timestamp (ms) for efficient filtering
     history.unshift(event);
     if (history.length > MAX_HISTORY) {
         history.pop();
+    }
+    // Notify SSE subscribers (send new event)
+    const payload = `data: ${JSON.stringify(event)}\n\n`;
+    for (const res of sseSubscribers) {
+        try {
+            res.write(payload);
+        } catch (err) {
+            // ignore individual subscriber errors
+        }
     }
 }
 
@@ -259,6 +271,11 @@ app.post('/api/vote/submit', (req, res) => {
 // Rota para obter comandos/eventos
 app.get('/api/comandos', (req, res) => {
     try {
+        const since = req.query.since ? parseInt(req.query.since, 10) : 0;
+        if (since && !isNaN(since)) {
+            const filtered = history.filter(e => (e.ts || 0) > since);
+            return res.status(200).json({ sucesso: true, comandos: filtered });
+        }
         return res.status(200).json({ sucesso: true, comandos: history });
     } catch (error) {
         console.error('Erro em /api/comandos:', error);
@@ -267,6 +284,27 @@ app.get('/api/comandos', (req, res) => {
             mensagem: 'Erro ao buscar comandos'
         });
     }
+});
+
+// SSE endpoint for real-time updates from server (reduces client polling)
+app.get('/api/stream', (req, res) => {
+    // Set headers for SSE
+    res.set({
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        Connection: 'keep-alive'
+    });
+    res.flushHeaders && res.flushHeaders();
+
+    // Send a ping to establish connection
+    res.write('event: connected\n');
+    res.write('data: {"ok":true}\n\n');
+
+    sseSubscribers.add(res);
+
+    req.on('close', () => {
+        sseSubscribers.delete(res);
+    });
 });
 
 // Rota para obter votação atual
