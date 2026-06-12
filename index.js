@@ -12,6 +12,17 @@ app.use(helmet()); // Helmet para headers de segurança
 app.use(xss()); // Sanitiza entrada para prevenir XSS
 app.use(express.json({ limit: '10kb' })); // Limita tamanho do body para prevenir ataques
 
+// CORS middleware para permitir requisições do Roblox
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    if (req.method === 'OPTIONS') {
+        return res.sendStatus(200);
+    }
+    next();
+});
+
 // Rate Limiting para prevenir DDoS
 const apiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutos
@@ -88,140 +99,238 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Rota para analisar mensagem/comando
 app.post('/api/analisar', (req, res) => {
-    const { player, conteudo } = req.body;
-    const text = (conteudo || '').toString().trim();
+    try {
+        const { player, conteudo, placeId, jobId } = req.body;
+        const text = (conteudo || '').toString().trim();
 
-    if (!player || typeof player !== 'string' || !text) {
-        return res.status(400).json({
+        if (!player || typeof player !== 'string' || !text) {
+            return res.status(400).json({
+                sucesso: false,
+                mensagem: 'Requisição inválida. Envie os campos "player" e "conteudo".'
+            });
+        }
+
+        // Limita tamanho da mensagem
+        if (text.length > 500) {
+            return res.status(400).json({
+                sucesso: false,
+                mensagem: 'Mensagem muito longa (máximo 500 caracteres).'
+            });
+        }
+
+        const event = {
+            tipo: 'chat',
+            player: player,
+            conteudo: text,
+            placeId: placeId || null,
+            jobId: jobId || null
+        };
+
+        const globalCommand = detectGlobalCommand(text, req.body);
+        if (globalCommand) {
+            event.tipo = 'comando_global';
+            event.acao = globalCommand.acao;
+            event.parametros = globalCommand.parametros;
+        }
+
+        addToHistory(event);
+        return res.status(200).json({ sucesso: true, mensagem: 'Mensagem recebida.', evento: event });
+    } catch (error) {
+        console.error('Erro em /api/analisar:', error);
+        return res.status(500).json({
             sucesso: false,
-            mensagem: 'Requisição inválida. Envie os campos "player" e "conteudo".'
+            mensagem: 'Erro interno do servidor'
         });
     }
-
-    const event = {
-        tipo: 'chat',
-        player: player,
-        conteudo: text
-    };
-
-    const globalCommand = detectGlobalCommand(text, req.body);
-    if (globalCommand) {
-        event.tipo = 'comando_global';
-        event.acao = globalCommand.acao;
-        event.parametros = globalCommand.parametros;
-    }
-
-    addToHistory(event);
-    return res.status(200).json({ sucesso: true, mensagem: 'Mensagem recebida.', evento: event });
 });
 
 // Rota para criar votação
 app.post('/api/vote/create', (req, res) => {
-    const { player, question, option1, option2 } = req.body;
+    try {
+        const { player, question, option1, option2 } = req.body;
 
-    if (!player || typeof player !== 'string' || !question) {
-        return res.status(400).json({
-            sucesso: false,
-            mensagem: 'Requisição inválida.'
-        });
-    }
-
-    if (currentVote) {
-        return res.status(400).json({
-            sucesso: false,
-            mensagem: 'Já há uma votação ativa.'
-        });
-    }
-
-    currentVote = {
-        id: generateUniqueId(),
-        creator: player,
-        question: question,
-        option1: option1 || 'Sim',
-        option2: option2 || 'Não',
-        votes: {},
-        startTime: Date.now(),
-        duration: 20000
-    };
-
-    const voteEvent = {
-        tipo: 'vote_start',
-        player: player,
-        vote: currentVote
-    };
-
-    addToHistory(voteEvent);
-
-    // Timer para encerrar votação
-    setTimeout(() => {
-        if (currentVote) {
-            const totalVotes = Object.keys(currentVote.votes).length;
-            const option1Votes = Object.values(currentVote.votes).filter(v => v === 1).length;
-            const option2Votes = Object.values(currentVote.votes).filter(v => v === 2).length;
-
-            const resultsEvent = {
-                tipo: 'vote_end',
-                vote: currentVote,
-                results: {
-                    total: totalVotes,
-                    option1: totalVotes > 0 ? Math.round((option1Votes / totalVotes) * 100) : 0,
-                    option2: totalVotes > 0 ? Math.round((option2Votes / totalVotes) * 100) : 0
-                }
-            };
-
-            addToHistory(resultsEvent);
-            currentVote = null;
+        if (!player || typeof player !== 'string' || !question) {
+            return res.status(400).json({
+                sucesso: false,
+                mensagem: 'Requisição inválida.'
+            });
         }
-    }, 20000);
 
-    return res.status(200).json({ sucesso: true, vote: currentVote });
+        if (currentVote) {
+            return res.status(400).json({
+                sucesso: false,
+                mensagem: 'Já há uma votação ativa.'
+            });
+        }
+
+        currentVote = {
+            id: generateUniqueId(),
+            creator: player,
+            question: question,
+            option1: option1 || 'Sim',
+            option2: option2 || 'Não',
+            votes: {},
+            startTime: Date.now(),
+            duration: 20000
+        };
+
+        const voteEvent = {
+            tipo: 'vote_start',
+            player: player,
+            vote: currentVote
+        };
+
+        addToHistory(voteEvent);
+
+        // Timer para encerrar votação
+        setTimeout(() => {
+            try {
+                if (currentVote) {
+                    const totalVotes = Object.keys(currentVote.votes).length;
+                    const option1Votes = Object.values(currentVote.votes).filter(v => v === 1).length;
+                    const option2Votes = Object.values(currentVote.votes).filter(v => v === 2).length;
+
+                    const resultsEvent = {
+                        tipo: 'vote_end',
+                        vote: currentVote,
+                        results: {
+                            total: totalVotes,
+                            option1: totalVotes > 0 ? Math.round((option1Votes / totalVotes) * 100) : 0,
+                            option2: totalVotes > 0 ? Math.round((option2Votes / totalVotes) * 100) : 0
+                        }
+                    };
+
+                    addToHistory(resultsEvent);
+                    currentVote = null;
+                }
+            } catch (error) {
+                console.error('Erro ao encerrar votação:', error);
+                currentVote = null;
+            }
+        }, 20000);
+
+        return res.status(200).json({ sucesso: true, mensagem: 'Votação criada com sucesso!', vote: currentVote });
+    } catch (error) {
+        console.error('Erro em /api/vote/create:', error);
+        return res.status(500).json({
+            sucesso: false,
+            mensagem: 'Erro interno do servidor'
+        });
+    }
 });
 
 // Rota para enviar voto
 app.post('/api/vote/submit', (req, res) => {
-    const { player, voteId, choice } = req.body;
+    try {
+        const { player, voteId, choice } = req.body;
 
-    if (!player || typeof player !== 'string' || !voteId || !choice) {
-        return res.status(400).json({
+        if (!player || typeof player !== 'string' || !voteId || !choice) {
+            return res.status(400).json({
+                sucesso: false,
+                mensagem: 'Requisição inválida.'
+            });
+        }
+
+        if (!currentVote || currentVote.id !== voteId) {
+            return res.status(400).json({
+                sucesso: false,
+                mensagem: 'Votação não está ativa ou já terminou.'
+            });
+        }
+
+        if (currentVote.votes[player]) {
+            return res.status(400).json({
+                sucesso: false,
+                mensagem: 'Você já votou!'
+            });
+        }
+
+        currentVote.votes[player] = choice;
+        return res.status(200).json({ sucesso: true, mensagem: 'Voto registrado com sucesso!' });
+    } catch (error) {
+        console.error('Erro em /api/vote/submit:', error);
+        return res.status(500).json({
             sucesso: false,
-            mensagem: 'Requisição inválida.'
+            mensagem: 'Erro interno do servidor'
         });
     }
-
-    if (!currentVote || currentVote.id !== voteId) {
-        return res.status(400).json({
-            sucesso: false,
-            mensagem: 'Votação não está ativa ou já terminou.'
-        });
-    }
-
-    if (currentVote.votes[player]) {
-        return res.status(400).json({
-            sucesso: false,
-            mensagem: 'Você já votou!'
-        });
-    }
-
-    currentVote.votes[player] = choice;
-    return res.status(200).json({ sucesso: true });
 });
 
 // Rota para obter comandos/eventos
 app.get('/api/comandos', (req, res) => {
-    return res.status(200).json({ sucesso: true, comandos: history });
+    try {
+        return res.status(200).json({ sucesso: true, comandos: history });
+    } catch (error) {
+        console.error('Erro em /api/comandos:', error);
+        return res.status(500).json({
+            sucesso: false,
+            mensagem: 'Erro ao buscar comandos'
+        });
+    }
 });
 
 // Rota para obter votação atual
 app.get('/api/vote/current', (req, res) => {
-    return res.status(200).json({ sucesso: true, vote: currentVote });
+    try {
+        return res.status(200).json({ sucesso: true, vote: currentVote });
+    } catch (error) {
+        console.error('Erro em /api/vote/current:', error);
+        return res.status(500).json({
+            sucesso: false,
+            mensagem: 'Erro ao buscar votação'
+        });
+    }
 });
 
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    try {
+        res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    } catch (error) {
+        console.error('Erro ao servir index.html:', error);
+        res.status(500).send('Erro ao carregar página');
+    }
+});
+
+// Tratamento de erros global
+app.use((err, req, res, next) => {
+    console.error('Erro não tratado:', err);
+    res.status(500).json({
+        sucesso: false,
+        mensagem: 'Erro interno do servidor'
+    });
+});
+
+// Rota 404
+app.use((req, res) => {
+    res.status(404).json({
+        sucesso: false,
+        mensagem: 'Rota não encontrada'
+    });
 });
 
 // Inicia o servidor
-app.listen(port, () => {
-    console.log(`Embee Studio Server rodando na porta ${port}`);
-    console.log('Segurança ativada: Helmet, XSS-Clean, Rate Limiting');
+const server = app.listen(port, () => {
+    console.log(`\n✅ Embee Studio Server rodando na porta ${port}`);
+    console.log(`🌐 URL: http://localhost:${port}`);
+    console.log('🔒 Segurança ativada: Helmet, XSS-Clean, Rate Limiting, CORS');
+    console.log('📝 Status: Pronto para receber requisições\n');
+});
+
+// Tratamento de erros não capturados
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('❌ Promise rejection não tratada:', reason);
+});
+
+process.on('uncaughtException', (error) => {
+    console.error('❌ Exceção não capturada:', error);
+    process.exit(1);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+    console.log('📍 SIGTERM recebido, encerrando servidor...');
+    server.close(() => {
+        console.log('✅ Servidor encerrado');
+        process.exit(0);
+    });
 });
