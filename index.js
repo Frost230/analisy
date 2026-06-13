@@ -2,7 +2,6 @@
 
 const path = require('path');
 const express = require('express');
-const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const xss = require('xss-clean');
 const app = express();
@@ -22,19 +21,6 @@ app.use((req, res, next) => {
         return res.sendStatus(200);
     }
     next();
-});
-
-
-const apiLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 100,
-    message: 'Muitas requisições! Tente novamente mais tarde.'
-});
-
-const readLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 1000,
-    message: 'Muitas requisições! Tente novamente mais tarde.'
 });
 
 
@@ -117,7 +103,7 @@ function detectGlobalCommand(text, body) {
 app.use(express.static(path.join(__dirname, 'public')));
 
 
-app.post('/api/analisar', apiLimiter, (req, res) => {
+app.post('/api/analisar', (req, res) => {
     try {
         const { player, conteudo, placeId, jobId } = req.body;
         const text = (conteudo || '').toString().trim();
@@ -164,7 +150,7 @@ app.post('/api/analisar', apiLimiter, (req, res) => {
 });
 
 
-app.post('/api/vote/create', apiLimiter, (req, res) => {
+app.post('/api/vote/create', (req, res) => {
     try {
         const { player, question, option1, option2 } = req.body;
 
@@ -239,7 +225,7 @@ app.post('/api/vote/create', apiLimiter, (req, res) => {
 });
 
 
-app.post('/api/vote/submit', apiLimiter, (req, res) => {
+app.post('/api/vote/submit', (req, res) => {
     try {
         const { player, voteId, choice } = req.body;
 
@@ -276,7 +262,7 @@ app.post('/api/vote/submit', apiLimiter, (req, res) => {
 });
 
 
-app.get('/api/comandos', readLimiter, (req, res) => {
+app.get('/api/comandos', (req, res) => {
     try {
         const since = req.query.since ? parseInt(req.query.since, 10) : 0;
         if (since && !isNaN(since)) {
@@ -355,27 +341,27 @@ app.use((req, res) => {
 
 
 const server = app.listen(port, () => {
-    console.log(`\n✅ Embee Studio Server rodando na porta ${port}`);
-    console.log(`🌐 URL: http:
-    console.log('🔒 Segurança ativada: Helmet, XSS-Clean, Rate Limiting, CORS');
-    console.log('📝 Status: Pronto para receber requisições\n');
+    console.log(`\nEmbee Studio Server rodando na porta ${port}`);
+    console.log(`URL: http://localhost:${port}`);
+    console.log('Segurança ativada: Helmet, XSS-Clean, Rate Limiting, CORS');
+    console.log('Status: Pronto para receber requisições\n');
 });
 
 
 process.on('unhandledRejection', (reason, promise) => {
-    console.error('❌ Promise rejection não tratada:', reason);
+    console.error('Promise rejection não tratada:', reason);
 });
 
 process.on('uncaughtException', (error) => {
-    console.error('❌ Exceção não capturada:', error);
+    console.error('Exceção não capturada:', error);
     process.exit(1);
 });
 
 
 process.on('SIGTERM', () => {
-    console.log('📍 SIGTERM recebido, encerrando servidor...');
+    console.log('SIGTERM recebido, encerrando servidor...');
     server.close(() => {
-        console.log('✅ Servidor encerrado');
+        console.log('Servidor encerrado');
         process.exit(0);
     });
 });
